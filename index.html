@@ -1,0 +1,1283 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>AI Video Studio — FLOW V24</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#08080a;color:#f5f5f5;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
+.wrap{max-width:800px;margin:auto;padding:12px}.top{position:sticky;top:0;z-index:9;background:#08080af2;backdrop-filter:blur(12px);padding:9px 2px 12px}.logo{font-size:20px;font-weight:900}.sub{font-size:12px;color:#a1a1aa;margin-top:3px}
+.card,.scene{background:#151518;border:1px solid #2d2d34;border-radius:18px;padding:15px;margin:12px 0}
+label{display:block;color:#b8b8c0;font-size:13px;margin:11px 0 6px}textarea,select,input{width:100%;background:#0e0e11;color:#fff;border:1px solid #38383f;border-radius:12px;padding:12px;font-size:15px;outline:0}
+textarea{min-height:100px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btn{width:100%;border:0;border-radius:14px;padding:14px;margin-top:9px;font-size:15px;font-weight:850;cursor:pointer}.main{background:#fff;color:#08080a}.dark{background:#29292f;color:#fff}
+.status{display:none;color:#bdbdc5;font-size:13px;margin-top:11px}.bar{height:7px;background:#29292f;border-radius:99px;overflow:hidden;margin-top:7px}.fill{height:100%;width:0;background:#fff;transition:.25s}
+#result{display:none}.summary{color:#aaa;font-size:12px;line-height:1.5;margin:4px 0 10px}.bible{background:#101014;border:1px dashed #3a3a43;border-radius:14px;padding:12px;font-size:12px;line-height:1.55;color:#d2d2d8}
+.scene{background:#101014}.scene h3{font-size:16px;margin:0 0 9px}.copy{float:right;background:#2a2a31;color:#fff;border:0;border-radius:9px;padding:7px 9px;margin-left:5px}.tag{display:inline-block;background:#25252c;color:#d0d0d6;border-radius:99px;padding:4px 8px;font-size:11px;margin:2px}
+.section{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#9999a2;margin-top:12px}.scene p{font-size:13px;line-height:1.55;color:#ddd;margin:8px 0}.prompt{background:#0b0b0e;border:1px solid #292930;border-radius:11px;padding:10px}.warn{font-size:11px;color:#a9a9b1;margin-top:8px}
+
+#categorySelect{width:100%;min-height:56px;padding:14px;border-radius:14px;border:1px solid #3a3a40;background:#111;color:#fff;font-size:16px}
+.history-card{background:#101014;border:1px solid #292930;border-radius:16px;padding:12px;margin:12px 0}
+.history-head{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px;margin-bottom:9px}
+.history-head span{color:#a1a1aa;font-size:11px}
+.history-list{max-height:220px;overflow:auto;border:1px solid #24242b;border-radius:11px;padding:5px;margin-bottom:9px}
+.history-item{display:flex;gap:8px;padding:7px 6px;border-bottom:1px solid #202026;font-size:12px;color:#ddd}
+.history-item:last-child{border-bottom:0}
+.history-item span:first-child{color:#58d68d}
+.history-empty{padding:12px;color:#888;font-size:12px;text-align:center}
+.batch-card{background:#101014;border:1px solid #3a3a43;border-radius:18px;padding:15px;margin:14px 0}.batch-item{background:#151518;border:1px solid #2d2d34;border-radius:15px;padding:12px;margin:10px 0}.batch-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.batch-title{font-weight:900}.batch-meta{font-size:11px;color:#999;margin-top:3px}.batch-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.batch-actions .btn{margin-top:8px;padding:11px;font-size:13px}.narration-box{white-space:pre-wrap;background:#0b0b0e;border:1px solid #292930;border-radius:10px;padding:12px;margin-top:8px;font-size:13px;line-height:1.55;max-height:300px;overflow:auto;color:#ddd}.batch-code{white-space:pre-wrap;background:#0b0b0e;border:1px solid #292930;border-radius:10px;padding:10px;margin-top:8px;font-size:12px;line-height:1.45;max-height:180px;overflow:auto;color:#ddd} </style>
+</head>
+<body>
+<div class="wrap">
+<div class="top"><div class="logo">🎬 AI VIDEO STUDIO — FLOW V23</div><div class="sub">Director de escenas · continuidad · acción · cámara · iluminación · prompts para Google Flow</div></div>
+
+<div class="card">
+<label>TEMA</label>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(170px,0.7fr);gap:10px;align-items:start">
+  <div>
+    <label>TEMA</label>
+    <textarea id="topic" placeholder="El tema aparecerá automáticamente al elegir una categoría"></textarea>
+  </div>
+  <div>
+    <label>CATEGORÍA</label>
+    <select id="categorySelect">
+      <option value="Biblia">📖 Biblia</option>
+      <option value="Reflexión bíblica">✝️ Reflexión bíblica</option>
+      <option value="Reflexión del día">☀️ Reflexión del día</option>
+      <option value="Misterios">🕵️ Misterios</option>
+      <option value="Curiosidades">🔎 Curiosidades</option>
+      <option value="Historia">🏛️ Historia</option>
+      <option value="Historia antigua">📜 Historia antigua</option>
+      <option value="Arqueología">🏺 Arqueología</option>
+      <option value="Ciencia">🔬 Ciencia</option>
+      <option value="Espacio y astronomía">🚀 Espacio y astronomía</option>
+      <option value="Tecnología">💻 Tecnología</option>
+      <option value="Inteligencia artificial">🤖 Inteligencia artificial</option>
+      <option value="Naturaleza">🌿 Naturaleza</option>
+      <option value="Animales">🐾 Animales</option>
+      <option value="Océanos">🌊 Océanos</option>
+      <option value="Geografía">🌍 Geografía</option>
+      <option value="Lugares sorprendentes">🗺️ Lugares sorprendentes</option>
+      <option value="Viajes">✈️ Viajes</option>
+      <option value="Cultura">🎭 Cultura</option>
+      <option value="Tradiciones">🪅 Tradiciones</option>
+      <option value="Psicología">🧠 Psicología</option>
+      <option value="Desarrollo personal">🌱 Desarrollo personal</option>
+      <option value="Motivación">🔥 Motivación</option>
+      <option value="Superación personal">💪 Superación personal</option>
+      <option value="Historias de vida">❤️ Historias de vida</option>
+      <option value="Filosofía">🧩 Filosofía</option>
+      <option value="Preguntas y respuestas">❓ Preguntas y respuestas</option>
+      <option value="Datos sorprendentes">🤯 Datos sorprendentes</option>
+      <option value="Cosas extrañas">👁️ Cosas extrañas</option>
+      <option value="Casos sin resolver">🔍 Casos sin resolver</option>
+      <option value="Crímenes históricos">🕰️ Crímenes históricos</option>
+      <option value="Leyendas">📚 Leyendas</option>
+      <option value="Mitos">🐉 Mitos</option>
+      <option value="Folclore">🎎 Folclore</option>
+      <option value="Civilizaciones antiguas">🏺 Civilizaciones antiguas</option>
+      <option value="Grandes inventos">💡 Grandes inventos</option>
+      <option value="Cómo se fabrica">🏭 Cómo se fabrica</option>
+      <option value="Automóviles">🚗 Automóviles</option>
+      <option value="Ingeniería">⚙️ Ingeniería</option>
+      <option value="Negocios">💼 Negocios</option>
+      <option value="Economía">📈 Economía</option>
+      <option value="Finanzas personales">💰 Finanzas personales</option>
+      <option value="Salud y bienestar">🧘 Salud y bienestar</option>
+      <option value="Alimentación">🍎 Alimentación</option>
+      <option value="Deportes">⚽ Deportes</option>
+      <option value="Música">🎵 Música</option>
+      <option value="Cine y televisión">🎬 Cine y televisión</option>
+      <option value="Libros">📚 Libros</option>
+      <option value="Arte">🎨 Arte</option>
+      <option value="Educación">🎓 Educación</option>
+      <option value="Idiomas">🗣️ Idiomas</option>
+      <option value="Productividad">⏱️ Productividad</option>
+      <option value="Tecnología del futuro">🔮 Tecnología del futuro</option>
+      <option value="Historias inspiradoras">🌟 Historias inspiradoras</option>
+      <option value="Terror">😱 Terror</option>
+      <option value="Paranormal">👻 Paranormal</option>
+      <option value="Ovnis y extraterrestres">🛸 Ovnis y extraterrestres</option>
+      <option value="Conspiraciones">🧿 Conspiraciones</option>
+      <option value="Reflexiones">💭 Reflexiones</option>
+      <option value="Otro">✨ Otro</option>
+      <option value="__MANUAL__">✍️ Tema manual — escribir mi propio tema</option>
+</select>
+  </div>
+</div>
+<label>GUIÓN GENERADO</label>
+<textarea id="scriptBox" style="display:none;min-height:150px" placeholder="Pulsa SIGUIENTE GUIÓN para generar el guion del tema."></textarea>
+<div class="row">
+<div><label>TIPO</label><select id="type"><option>Video largo</option><option>Short</option></select></div>
+<div><label>DURACIÓN</label><select id="dur"><option value="60">1 min</option><option value="120">2 min</option><option value="180">3 min</option><option value="240">4 min</option><option value="300">5 min</option><option value="360">6 min</option><option value="420">7 min</option><option value="480">8 min</option><option value="540">9 min</option><option value="600">10 min</option><option value="660">11 min</option><option value="720">12 min</option><option value="780">13 min</option><option value="840">14 min</option><option value="900">15 min</option></select></div>
+</div>
+<div class="row">
+<div><label>FORMATO</label><select id="fmt"><option>16:9 YouTube</option><option>9:16 Shorts</option></select></div>
+<div><label>ESTILO VISUAL</label><select id="style">
+<option>Cinematográfico realista</option><option>Documental realista</option><option>Documental histórico</option><option>Documental arqueológico</option><option>Misterio cinematográfico</option><option>Thriller / suspenso cinematográfico</option><option>Oscuro y tenso</option><option>Terror atmosférico</option><option>Horror psicológico</option><option>Paranormal</option><option>Folk horror / terror folclórico</option><option>Bíblico cinematográfico</option><option>Épico bíblico</option><option>Drama histórico</option><option>Épico histórico</option><option>Realismo de época</option><option>Fantasía cinematográfica</option><option>Fantasía oscura</option><option>Ciencia ficción cinematográfica</option><option>Cyberpunk</option><option>Futurista</option><option>Postapocalíptico</option><option>Steampunk</option><option>Retro futurista</option><option>Space opera</option><option>Curiosidad científica</option><option>Visualización científica</option><option>Exploración espacial</option><option>Naturaleza documental</option><option>Vida salvaje / wildlife</option><option>Océano documental</option><option>Viaje cinematográfico</option><option>Aventura cinematográfica</option><option>Arquitectura / visualización realista</option><option>Industrial / ingeniería</option><option>Automoción cinematográfica</option><option>Tecnología futurista</option><option>IA / interfaz futurista</option><option>Minimalista elegante</option><option>Editorial / revista</option><option>Publicidad premium</option><option>Fotografía de moda</option><option>Retrato fotográfico</option><option>Street photography</option><option>Vintage / película analógica</option><option>Retro años 70</option><option>Retro años 80</option><option>Retro años 90</option><option>Polaroid / instantánea</option><option>Anime cinematográfico</option><option>Animación 3D cinematográfica</option><option>3D estilizado</option><option>Stop motion</option><option>Claymation</option><option>Cómic cinematográfico</option><option>Novela gráfica</option><option>Acuarela</option><option>Óleo pictórico</option><option>Ilustración editorial</option><option>Grabado antiguo</option><option>Arte medieval</option><option>Arte renacentista</option><option>Arte barroco</option><option>Surrealista</option><option>Dark fantasy</option><option>Reflexión emocional</option><option>Motivacional inspirador</option><option>Espiritual contemplativo</option><option>Poético / soñador</option><option>Onírico</option><option>Neón / synthwave</option><option>Vaporwave</option><option>Lo-fi cinematográfico</option>
+</select></div>
+</div>
+<label>INTERVALO</label><select id="int"><option value="3">1 escena cada 3 segundos</option><option value="4">1 escena cada 4 segundos</option><option value="5" selected>1 escena cada 5 segundos</option><option value="8">1 escena cada 8 segundos</option><option value="10">1 escena cada 10 segundos</option></select>
+<label>INTENSIDAD VISUAL</label><select id="detail"><option>Máximo detalle cinematográfico</option><option>Detalle alto</option></select>
+<button class="btn main" onclick="createProject()">🚀 CREAR PROYECTO — DIRECTOR V24</button>
+<div class="row">
+<button class="btn dark" onclick="nextTopic()">➡️ SIGUIENTE TEMA</button>
+<button class="btn dark" onclick="nextScript()">📝 CREAR GUIÓN</button>
+</div>
+<div class="warn">Al elegir una categoría, el TEMA se genera automáticamente. Los temas usados se guardan por categoría para evitar repeticiones. Cuando se agota la lista preparada, el sistema genera nuevas combinaciones automáticamente.</div>
+<div class="batch-card" id="aiEnginePanel">
+  <div style="font-size:18px;font-weight:900">🧠 MOTOR IA + 🔎 BÚSQUEDA WEB</div>
+  <div class="summary">Investiga el tema con fuentes actuales y usa esa información para construir una narración específica. Puedes elegir OpenAI o Claude.</div>
+  <div class="row">
+    <div><label>MOTOR</label><select id="aiProvider" onchange="updateAIProvider()"><option value="openai">OpenAI / ChatGPT</option><option value="claude">Anthropic / Claude</option></select></div>
+    <div><label>MODELO</label><input id="aiModel" value="gpt-5.6-luna" placeholder="Modelo API"></div>
+  </div>
+  <label>CONEXIÓN SEGURA</label>
+  <div class="status">🔐 La V24 usa un backend seguro. La API key se configura en el servidor y no se guarda en este navegador.</div>
+  <div class="row">
+    <div><label>BÚSQUEDA</label><select id="aiSearch"><option value="required">Obligatoria</option><option value="auto">Automática</option></select></div>
+    <div><label>PROFUNDIDAD</label><select id="aiDepth"><option value="normal">Normal</option><option value="deep">Profunda</option></select></div>
+  </div>
+  <button class="btn main" onclick="saveAISettings()">💾 GUARDAR CONFIGURACIÓN</button>
+  <button class="btn dark" onclick="testAIResearch()">🔎 PROBAR INVESTIGACIÓN DEL TEMA</button>
+  <div id="aiStatus" class="status" style="display:block">Motor IA listo. Para usar búsqueda real necesitas una API key del proveedor seleccionado.</div>
+  <div id="aiSources" class="narration-box" style="display:none"></div>
+  <div class="warn">🔐 Seguridad: la clave de OpenAI/Claude queda en el servidor mediante variables de entorno. Nunca se envía al navegador.</div>
+</div>
+
+<div class="history-card">
+  <div class="history-head"><b>📚 HISTORIAL DE TEMAS</b><span id="topicCount">0 temas usados</span></div>
+  <div id="topicHistory" class="history-list"></div>
+  <button class="btn dark" onclick="resetCurrentCategory()">🗑️ REINICIAR ESTA CATEGORÍA</button>
+</div>
+<div class="status" id="status"></div><div class="bar"><div class="fill" id="fill"></div></div>
+</div>
+
+<div class="card" id="result">
+<div style="font-size:19px;font-weight:900">🎬 PROYECTO DIRIGIDO</div>
+<div class="summary" id="summary"></div><div class="bible" id="researchUsed" style="margin-bottom:10px;display:none"></div><div class="bible" id="usedTopic" style="margin-bottom:10px"><b>🎯 TEMA USADO:</b> —</div><div class="bible" id="categoryUsed" style="margin-bottom:10px">📚 CATEGORÍA: —</div>
+<div class="bible" id="bible"></div>
+<div class="bible" id="consistencyCard" style="margin-top:10px"><b>🔒 PROMPT GUÍA DE CONSISTENCIA</b><p id="consistencyGuide" style="white-space:pre-wrap;margin:8px 0;color:#ddd">—</p><button class="btn dark" onclick="copyConsistencyGuide()">📋 COPIAR PROMPT GUÍA</button><div style="font-size:11px;color:#999;margin-top:7px">Prompt maestro que se incorpora a cada escena para mantener personajes, vestuario, lugares, época, iluminación y continuidad.</div></div>
+<button class="btn dark" onclick="copyAll()">📋 COPIAR TODO</button>
+<button class="btn dark" onclick="downloadTxt()">⬇️ GUARDAR PROYECTO TXT</button>
+<div class="batch-card" id="narrationPanel">
+  <div style="font-size:18px;font-weight:900">🎙️ NARRACIÓN — SOLO VOZ</div>
+  <div class="summary">Aquí tendrás únicamente la narración del video, sin prompts, escenas ni instrucciones. Puedes copiarla completa y llevarla a tu generador de voz.</div>
+  <button class="btn main" onclick="copyNarration()">📋 COPIAR TODA LA NARRACIÓN</button>
+  <button class="btn dark" onclick="downloadNarration()">⬇️ GUARDAR NARRACIÓN TXT</button>
+  <div id="narrationText" class="narration-box">La narración aparecerá aquí cuando crees el proyecto.</div>
+</div>
+<div class="batch-card" id="batchPanel">
+  <div style="font-size:18px;font-weight:900">📦 LOTES PARA GOOGLE FLOW</div>
+  <div class="summary">Prepara los prompts en grupos para copiarlos y llevarlos a Google Flow. Esto no simula clics dentro de Flow: la aplicación prepara y copia los lotes.</div>
+  <div class="row">
+    <div><label>TAMAÑO DEL LOTE</label><select id="batchSize"><option value="5">5 escenas</option><option value="10" selected>10 escenas</option><option value="20">20 escenas</option></select></div>
+    <div><label>FORMATO DE COPIA</label><select id="batchFormat"><option value="prompt">Solo prompts Flow</option><option value="full">Prompt + datos de escena</option></select></div>
+  </div>
+  <button class="btn main" onclick="prepareBatches()">📦 PREPARAR LOTES</button>
+  <button class="btn dark" onclick="copyAllBatches()">📋 COPIAR TODOS LOS LOTES</button>
+  <button class="btn dark" onclick="downloadBatchesTxt()">⬇️ GUARDAR LOTES TXT</button>
+  <button class="btn dark" onclick="openGoogleFlow()">🖼️ ABRIR GOOGLE FLOW</button>
+  <div id="batchList"></div>
+</div>
+<div id="scenes"></div>
+</div>
+</div>
+
+<script>
+let CURRENT_TOPIC="";
+let CURRENT_SCRIPT="";
+let CURRENT_CATEGORY="";
+let AI_SCRIPT="";
+let AI_RESEARCH="";
+let AI_SOURCES=[];
+const $=id=>document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+function time(s){return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+const TOPIC_PROGRESS_KEY='ai_video_studio_flow_topic_progress_v2';
+const TOPIC_HISTORY_KEY='ai_video_studio_flow_topic_history_v2';
+function loadTopicProgress(){try{return JSON.parse(localStorage.getItem(TOPIC_PROGRESS_KEY)||'{}')}catch(e){return {}}}
+function loadTopicHistory(){try{return JSON.parse(localStorage.getItem(TOPIC_HISTORY_KEY)||'{}')}catch(e){return {}}}
+function saveTopicProgress(category,topic){
+  const data=loadTopicProgress();
+  data[category]=topic||'';
+  localStorage.setItem(TOPIC_PROGRESS_KEY,JSON.stringify(data));
+}
+function markTopicUsed(category,topic){
+  if(!category||!topic)return;
+  const data=loadTopicHistory();
+  if(!Array.isArray(data[category])) data[category]=[];
+  const key=String(topic).trim().toLowerCase();
+  if(!data[category].some(x=>String(x).trim().toLowerCase()===key)) data[category].push(String(topic).trim());
+  localStorage.setItem(TOPIC_HISTORY_KEY,JSON.stringify(data));
+}
+function usedTopics(category){const data=loadTopicHistory();return Array.isArray(data[category])?data[category]:[]}
+function clearTopicHistory(category){
+  const data=loadTopicHistory();
+  if(category) delete data[category]; else Object.keys(data).forEach(k=>delete data[k]);
+  localStorage.setItem(TOPIC_HISTORY_KEY,JSON.stringify(data));
+  if(category) saveTopicProgress(category,'');
+}
+function topicForCategory(category){
+  return nextTopicForCategory(category,'');
+}
+function refreshHistoryUI(){
+  const cat=selectedCategory();
+  const list=usedTopics(cat);
+  const box=$('topicHistory');
+  const count=$('topicCount');
+  if(count) count.textContent=`${list.length} temas usados en ${cat}`;
+  if(box) box.innerHTML=list.length
+    ? list.slice().reverse().map((x,i)=>`<div class="history-item"><span>✓</span><span>${esc(x)}</span></div>`).join('')
+    : '<div class="history-empty">Todavía no hay temas usados en esta categoría.</div>';
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  if($('aiProvider')) loadAISettings();
+  const sel=$('categorySelect');
+  if(sel){
+    CURRENT_CATEGORY=sel.value==='__MANUAL__' ? 'Tema manual' : sel.value;
+    if(sel.value==='__MANUAL__'){
+      $('topic').value='';
+      $('topic').placeholder='Escribe aquí tu tema manualmente';
+    }else{
+      const first=topicForCategory(CURRENT_CATEGORY);
+      $('topic').value=first;
+      $('topic').placeholder='El tema aparecerá automáticamente al elegir una categoría';
+      CURRENT_TOPIC=first;
+      markTopicUsed(CURRENT_CATEGORY,first);
+      saveTopicProgress(CURRENT_CATEGORY,first);
+    }
+    const cat=$('categoryUsed');
+    if(cat) cat.textContent='📚 CATEGORÍA: '+CURRENT_CATEGORY;
+    refreshHistoryUI();
+    sel.addEventListener('change',()=>{
+      CURRENT_CATEGORY=sel.value==='__MANUAL__' ? 'Tema manual' : sel.value;
+      if(sel.value==='__MANUAL__'){
+        $('topic').value='';
+        $('topic').placeholder='Escribe aquí tu tema manualmente';
+        $('topic').focus();
+        if(cat) cat.textContent='📚 CATEGORÍA: Tema manual';
+        $('status').style.display='block';
+        $('status').textContent='Modo tema manual: escribe el tema que quieras y pulsa CREAR GUIÓN o CREAR PROYECTO.';
+      }else{
+        $('topic').placeholder='El tema aparecerá automáticamente al elegir una categoría';
+        const next=topicForCategory(CURRENT_CATEGORY);
+        $('topic').value=next;
+        CURRENT_TOPIC=next;
+        markTopicUsed(CURRENT_CATEGORY,next);
+        saveTopicProgress(CURRENT_CATEGORY,next);
+        if(cat) cat.textContent='📚 CATEGORÍA: '+CURRENT_CATEGORY;
+        $('status').style.display='block';
+        $('status').textContent='Continuando en '+CURRENT_CATEGORY+' desde donde te quedaste: '+next;
+      }
+      CURRENT_SCRIPT="";
+      if($('scriptBox')){$('scriptBox').value='';$('scriptBox').style.display='none';}
+      $('fill').style.width='0%';
+      refreshHistoryUI();
+    });
+  }
+});
+async function createProject(){
+ const inputTopic=$('topic').value.trim();
+ if(!inputTopic){alert('Escribe primero el tema.');return}
+ CURRENT_TOPIC=inputTopic;
+ CURRENT_CATEGORY=selectedCategory();
+ const cat=$('categoryUsed'); if(cat) cat.textContent='📚 CATEGORÍA: '+CURRENT_CATEGORY;
+ CURRENT_SCRIPT=$('scriptBox')?.value.trim()||'';
+ const useAI=true;
+ const steps=['Definiendo la premisa…','Investigando el tema…','Analizando fuentes…','Construyendo la narración…','Dirigiendo cada plano…'];
+ let i=0;$('status').style.display='block';$('fill').style.width='0%';
+ if(useAI){
+   setAIStatus('🔎 Investigando '+inputTopic+' con '+($('aiProvider')?.value==='claude'?'Claude':'OpenAI')+'…');
+   try{
+     await runAIResearch(inputTopic);
+     setAIStatus('✅ Investigación terminada. Generando escenas con la información encontrada.');
+   }catch(e){
+     setAIStatus('⚠️ '+e.message);
+     if(!confirm('La investigación IA no pudo completarse. ¿Quieres continuar sin el motor IA?')) return;
+   }
+ }
+ const q=setInterval(()=>{i++;$('status').textContent=steps[i-1];$('fill').style.width=(i*20)+'%';if(i===5){clearInterval(q);setTimeout(()=>render(CURRENT_TOPIC),250)}},250)
+}
+
+function setAIStatus(msg){const el=$('aiStatus');if(el){el.textContent=msg;el.style.display='block';}}
+function saveAISettings(){
+ localStorage.setItem('ai_video_provider',$('aiProvider').value);
+ localStorage.setItem('ai_video_model',$('aiModel').value.trim());
+ localStorage.setItem('ai_video_search',$('aiSearch').value);
+ localStorage.setItem('ai_video_depth',$('aiDepth').value);
+ setAIStatus('✅ Preferencias guardadas. La clave se mantiene en el servidor.');
+}
+function loadAISettings(){
+ const provider=localStorage.getItem('ai_video_provider')||'openai';
+ $('aiProvider').value=provider;
+ $('aiModel').value=localStorage.getItem('ai_video_model')||(provider==='claude'?'claude-sonnet-4-6':'gpt-5.6-luna');
+ $('aiSearch').value=localStorage.getItem('ai_video_search')||'required';
+ $('aiDepth').value=localStorage.getItem('ai_video_depth')||'normal';
+}
+function updateAIProvider(){
+ const p=$('aiProvider').value;
+ $('aiModel').value=localStorage.getItem('ai_video_model')||(p==='claude'?'claude-sonnet-4-6':'gpt-5.6-luna');
+ setAIStatus(p==='claude'?'Claude seleccionado. La clave se toma del backend.':'OpenAI / ChatGPT seleccionado. La clave se toma del backend.');
+}
+function extractSourcesFromOpenAI(data){
+ const out=[];
+ try{
+   for(const item of (data.output||[])) for(const c of (item.content||[])) for(const a of (c.annotations||[]))
+     if(a.type==='url_citation' && a.url) out.push({title:a.title||a.url,url:a.url});
+ }catch(e){}
+ return out.filter((x,i,a)=>a.findIndex(y=>y.url===x.url)===i);
+}
+function extractSourcesFromClaude(data){
+ const out=[];
+ for(const b of (data.content||[])) if(b.type==='text' && Array.isArray(b.citations))
+   for(const c of b.citations) if(c.url) out.push({title:c.title||c.url,url:c.url});
+ return out.filter((x,i,a)=>a.findIndex(y=>y.url===x.url)===i);
+}
+async function runAIResearch(topic){
+ const provider=$('aiProvider').value;
+ const category=selectedCategory(), duration=$('dur').value, style=$('style').value;
+ const depth=$('aiDepth').value;
+ const prompt=`Investiga en la web el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". Busca fuentes confiables y actuales cuando corresponda. Distingue hechos documentados de hipótesis, leyendas o afirmaciones no verificadas.\n\nDevuelve SOLO este formato:\nTÍTULO: ...\nRESUMEN: ...\nHECHOS CLAVE:\n- ...\n- ...\n- ...\nGUION: [narración continua en español, natural, sin encabezados dentro del guion, sin repetir ideas, con un gancho inicial y cierre].\n\nLa narración debe estar basada en la investigación y no inventar datos. Profundidad: ${depth}.`;
+ setAIStatus('🔐 Conectando con el backend seguro…');
+ const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,model:$('aiModel').value.trim(),search:$('aiSearch').value,depth,prompt})});
+ let data={}; try{data=await r.json()}catch(e){}
+ if(!r.ok) throw new Error(data?.error||'El backend no pudo completar la investigación.');
+ const textOut=data.text||'';
+ const sources=data.sources||[];
+ AI_RESEARCH=textOut; AI_SOURCES=sources;
+ const m=textOut.match(/GUION:\s*([\s\S]*)$/i);
+ AI_SCRIPT=(m?m[1]:textOut).trim();
+ const box=$('scriptBox'); if(box){box.value=AI_SCRIPT;box.style.display='block';}
+ const srcBox=$('aiSources'); if(srcBox){srcBox.style.display='block';srcBox.innerHTML='<b>FUENTES ENCONTRADAS</b>\n'+(sources.length?sources.map((x,i)=>`${i+1}. ${esc(x.title)}\n${esc(x.url)}`).join('\n\n'):'El proveedor no devolvió una lista de URLs en la respuesta.');}
+ return {text:textOut,sources};
+}
+async function testAIResearch(){
+ const topic=$('topic').value.trim(); if(!topic){alert('Escribe o genera primero un tema.');return}
+ saveAISettings();
+ try{await runAIResearch(topic);setAIStatus('✅ Prueba completada. La investigación y el guion ya están cargados.');}catch(e){setAIStatus('❌ '+e.message);alert(e.message)}
+}
+
+function fitNarrationToWords(text, maxWords, topic, n){
+ const clean=String(text||'').replace(/\s+/g,' ').trim();
+ if(!clean) return `Hoy podemos detenernos un momento y reflexionar sobre ${topic}.`;
+ const sentences=(clean.match(/[^.!?]+[.!?]+/g)||[clean]).map(x=>x.trim()).filter(Boolean);
+ const picked=[]; let total=0;
+ for(const sentence of sentences){
+   const w=wordsCount(sentence);
+   if(!picked.length || total+w<=maxWords+3){picked.push(sentence); total+=w;}
+   if(total>=Math.max(6,maxWords-1)) break;
+ }
+ // Nunca corta una oración a la mitad. Si una sola oración es larga, se conserva completa.
+ return picked.join(' ').trim();
+}
+
+function render(topic){
+ const dur=+$('dur').value, int=+$('int').value, count=Math.ceil(dur/int);
+ const fmt=$('fmt').value, style=$('style').value;
+ // La narración se calibra al tiempo seleccionado. Objetivo aproximado: 145 palabras/minuto,
+ // para que el audio generado quede cerca de la duración elegida en un TTS normal.
+ const targetWords=Math.max(25, Math.round((dur/60)*145));
+ const wordsPerScene=Math.max(4, Math.round(targetWords/count));
+ $('result').style.display='block';
+ $('consistencyGuide').textContent=consistencyGuide(topic,style,fmt);
+ $('summary').textContent=`${count} escenas · ${Math.round(dur/60)} min · ~${targetWords} palabras de narración · ${fmt} · ${style} · cada ${int}s`;
+ const researchUsed=$('researchUsed'); if(researchUsed){researchUsed.style.display=AI_RESEARCH?'block':'none';researchUsed.innerHTML=AI_RESEARCH?'<b>🔎 INVESTIGACIÓN IA APLICADA</b><br>'+esc(AI_SOURCES.length?('Fuentes: '+AI_SOURCES.map(x=>x.title).join(' · ')):'Investigación generada por el proveedor seleccionado.'):' ';}
+ CURRENT_CATEGORY=detectCategory(topic); const used=$('usedTopic'); if(used) used.innerHTML='<b>🎯 TEMA USADO:</b> '+esc(topic); const cat=$('categoryUsed'); if(cat) cat.textContent='📚 CATEGORÍA: '+CURRENT_CATEGORY; const bible=visualBible(topic);
+ $('bible').innerHTML='<b>📌 BIBLIA VISUAL — DEBE PERMANECER IGUAL</b><br>'+esc(bible);
+ const box=$('scenes'); box.innerHTML=''; let all=[];
+ for(let n=0;n<count;n++){
+   const d=sceneData(topic,n,count);
+   d.narration=fitNarrationToWords(d.narration, wordsPerScene, topic, n);
+   if(n>0 && all.length){ const prevNarr=(all[all.length-1].match(/NARRACIÓN:\n([\s\S]*?)\n\nQUÉ SE VE:/)||[])[1]?.trim(); if(prevNarr && d.narration.trim()===prevNarr){ d.narration = `${d.narration} Continúa con calma y permite que esta idea encuentre su lugar en tu proceso.`; }}
+   const prompt=flowPrompt(topic,style,fmt,bible,d,n);
+   const full=`ESCENA ${String(n+1).padStart(2,'0')} · ${time(n*int)}–${time((n+1)*int)}
+FASE: ${d.phase}
+
+NARRACIÓN:
+${d.narration}
+
+QUÉ SE VE:
+${d.visual}
+
+ACCIÓN:
+${d.action}
+
+CÁMARA:
+${d.camera}
+
+ILUMINACIÓN:
+${d.light}
+
+EMOCIÓN:
+${d.emotion}
+
+PROMPT PARA GOOGLE FLOW:
+${prompt}
+
+CONTINUIDAD:
+${d.continuity}`;
+   all.push(full);
+   const el=document.createElement('div');el.className='scene';
+   el.innerHTML=`<h3>ESCENA ${String(n+1).padStart(2,'0')} · ${time(n*int)}–${time((n+1)*int)}
+   <button class="copy" onclick="copyScene(this,'prompt')">🎥 Prompt Flow</button>
+   <button class="copy" onclick="copyScene(this,'all')">Copiar</button><button class="copy" onclick="openSceneFlow(this)">🖼️ Flow</button></h3>
+   <span class="tag">${d.phase}</span><span class="tag">${int}s</span>
+   <div class="section">🎙️ Narración</div><p>${esc(d.narration)}</p>
+   <div class="section">👁️ Qué se ve</div><p>${esc(d.visual)}</p>
+   <div class="section">🎬 Acción</div><p>${esc(d.action)}</p>
+   <div class="section">📷 Cámara</div><p>${esc(d.camera)}</p>
+   <div class="section">💡 Iluminación</div><p>${esc(d.light)}</p>
+   <div class="section">🎭 Emoción</div><p>${esc(d.emotion)}</p>
+   <div class="section">🎥 Prompt para Google Flow</div><p class="prompt">${esc(prompt)}</p>
+   <div class="section">🔗 Continuidad</div><p>${esc(d.continuity)}</p>`;
+   box.appendChild(el);
+ }
+ updateNarrationBox();
+ window.project=all.join('\\n\\n==============================\\n\\n');
+ window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+}
+function visualBible(topic){
+ return `Historia: ${topic}. Mantener los mismos personajes, rostros, edades aproximadas, peinados, vestuario, objetos, época, arquitectura, geografía, clima y paleta de iluminación durante toda la secuencia. Si un personaje aparece de nuevo, debe ser reconocible como la misma persona. No cambiar ropa ni rasgos sin una razón narrativa. Realismo cinematográfico, física creíble, proporciones humanas naturales. Sin texto en pantalla, sin subtítulos, sin logos y sin marcas de agua.`;
+}
+function consistencyGuide(topic,style,fmt){
+ const ratio=fmt.startsWith('9:16')?'9:16 vertical':'16:9 horizontal';
+ return `MASTER CONSISTENCY GUIDE — ${topic}\nSTYLE LOCK: ${style}\nFORMAT LOCK: ${ratio}\n\nUse this master guide as the visual source of truth for EVERY scene. Establish the canonical identity of every recurring character in the first scene and preserve it exactly in all later scenes.\n\nCHARACTER LOCK: Keep the same apparent age, face shape, skin tone, eye color, hairstyle, hair color, facial hair, body build, height, distinctive facial features, clothing, footwear and accessories for every recurring character. Do not redesign, replace, beautify, age, de-age or randomly alter a character. When a character returns, it must clearly be the SAME person.\n\nWARDROBE & PROP LOCK: Keep clothing colors, fabrics, patterns, accessories and important props identical unless the story explicitly changes them. Any intentional change must continue logically in subsequent scenes.\n\nWORLD LOCK: Keep location design, architecture, geography, era, season, weather, time of day, vehicles, materials and environmental details consistent.\n\nCINEMATIC LOCK: Preserve the selected visual style, proportions, lens language, depth of field, lighting logic, color treatment, exposure, image quality and cinematic language.\n\nCONTINUITY LOCK: Match screen direction, body position, hand/object placement, movement direction, spatial relationships and time progression from scene to scene. Each prompt continues from the previous scene instead of redesigning the world.\n\nPROMPT RULE: Each scene changes only what the narration requires. Never introduce a random replacement character or unrelated visual style. Generate ONE single coherent image per scene, never a collage, contact sheet or multiple panels. No text, subtitles, logos or watermarks.\n\nREFERENCE RULE: Treat the first scene as the canonical visual reference. All later images must look like frames from the SAME production with the SAME characters and world.`;
+}
+const phases=['GANCHO','CONTEXTO','PRESENTACIÓN','PISTA','DESARROLLO','TENSIÓN','DETALLE CLAVE','INVESTIGACIÓN','GIRO','REVELACIÓN','REFLEXIÓN','CIERRE'];
+function hashText(text){let h=0;for(let i=0;i<text.length;i++)h=((h<<5)-h)+text.charCodeAt(i)|0;return Math.abs(h);}
+const openingHooks=[
+ t=>`Hay algo en ${t} que, cuando se observa con atención, resulta difícil de ignorar. Y cuanto más se reconstruye la historia, más detalles empiezan a encajar.`,
+ t=>`La historia de ${t} parece sencilla al principio, pero un detalle cambia por completo la forma de verla. A partir de aquí, cada pieza importa.`,
+ t=>`Imagina descubrir que un pequeño detalle relacionado con ${t} puede cambiar toda la historia. Eso es precisamente lo que vamos a reconstruir.`,
+ t=>`Durante años, ${t} ha llamado la atención por una razón: hay partes de su historia que no encajan tan fácilmente como parecen.`,
+ t=>`Todo parecía tener una explicación hasta que apareció un detalle difícil de pasar por alto. Ese detalle nos lleva directamente a ${t}.`,
+ t=>`Hay historias que sorprenden por lo que ocurrió y otras por lo que todavía no podemos explicar. ${t} pertenece a ese segundo grupo.`,
+ t=>`Lo más interesante de ${t} no siempre está en lo evidente. A veces se encuentra en un detalle que casi nadie mira dos veces.`,
+ t=>`Primero ocurrió esto. Después apareció aquello. Y cuando ambas cosas se conectaron, la historia de ${t} tomó un rumbo inesperado.`,
+ t=>`Si observamos ${t} desde el principio, encontramos una serie de hechos que parecen normales… hasta que uno de ellos deja de tener sentido.`,
+ t=>`Esta historia guarda un detalle capaz de cambiar nuestra perspectiva sobre ${t}. Para descubrirlo, hay que seguir las pistas desde el comienzo.`
+];
+function openingHook(t){return openingHooks[hashText(t)%openingHooks.length](t)}
+const narrations=[
+ t=>openingHook(t),
+ t=>`Antes de llegar al momento más conocido, necesitamos conocer el lugar, las personas y las circunstancias que rodeaban esta historia.`,
+ t=>`Aquí aparecen los protagonistas y los elementos que van a conectar cada parte de la historia.`,
+ t=>`Pero entre todos los detalles existe uno que destaca. Puede parecer pequeño, aunque pronto demostrará su importancia.`,
+ t=>`A partir de aquí, los acontecimientos empiezan a cambiar. Una acción provoca otra y la historia avanza.`,
+ t=>`Entonces aparece algo extraño. No encaja completamente con lo que acabamos de observar y abre una nueva pregunta.`,
+ t=>`Este detalle merece atención porque puede explicar una parte que, hasta ahora, parecía difícil de entender.`,
+ t=>`La investigación reúne lugares, objetos y testimonios. Lo importante es separar los hechos conocidos de las interpretaciones.`,
+ t=>`Y entonces aparece un giro. Una nueva pieza obliga a mirar los acontecimientos desde otra perspectiva.`,
+ t=>`La revelación surge cuando las piezas se colocan juntas. Lo que parecía aislado comienza a tener sentido dentro de la historia.`,
+ t=>`Después de recorrer estos acontecimientos, queda una pregunta que no desaparece fácilmente y merece una reflexión final.`,
+ t=>`Al llegar al final, la historia nos deja una idea: algunas respuestas pueden ser claras, pero las preguntas profundas permanecen abiertas.`
+];
+const visuals=[
+ t=>`Un amanecer sobre un entorno relacionado directamente con ${t}; el lugar queda establecido con un plano amplio y profundo.`,
+ t=>`El entorno se revela poco a poco mientras aparecen los elementos humanos y físicos que explican el contexto de ${t}.`,
+ t=>`Los protagonistas de la historia aparecen en su entorno, realizando una acción cotidiana coherente con el momento narrativo.`,
+ t=>`La cámara encuentra una pista concreta: un objeto, huella, documento, lugar o detalle físico relacionado con ${t}.`,
+ t=>`La acción continúa desde la escena anterior; el protagonista interactúa con el elemento descubierto y provoca un cambio visible.`,
+ t=>`El mismo entorno se vuelve más tenso; el personaje observa algo fuera de cuadro mientras el ambiente cambia sutilmente.`,
+ t=>`Un primer plano muestra el detalle clave con textura y profundidad, mientras el fondo conserva los mismos elementos de continuidad.`,
+ t=>`Se representa una investigación visual mediante fotografías, mapas, objetos y observación humana, sin texto legible añadido.`,
+ t=>`La cámara revela gradualmente un nuevo elemento que estaba oculto detrás de un objeto o fuera del encuadre anterior.`,
+ t=>`Los elementos previamente vistos aparecen conectados en una composición visual clara y realista.`,
+ t=>`El personaje o entorno queda en un plano contemplativo, permitiendo procesar la información sin introducir elementos nuevos innecesarios.`,
+ t=>`Un plano final memorable resume visualmente el corazón de ${t} y cierra el recorrido con una imagen cinematográfica.`
+];
+function wordsCount(s){return String(s||'').trim().split(/\s+/).filter(Boolean).length;}
+function pickLine(lines,target,n){
+ const ranked=lines.map((x,i)=>({x,i,w:wordsCount(x)})).sort((a,b)=>{
+   const da=Math.abs(a.w-target), db=Math.abs(b.w-target);
+   return da-db || ((a.i+n)%lines.length)-((b.i+n)%lines.length);
+ });
+ return ranked[0]?.x || lines[n%lines.length];
+}
+function categoryNarration(topic,category,n,count){
+ const c=(category||'').toLowerCase();
+ const t=topic.trim();
+ const reflectionOpen=[
+  'A veces necesitamos detenernos un momento y escuchar lo que estamos sintiendo.',
+  'Hay días en los que avanzar parece mucho más difícil de lo que imaginábamos.',
+  'No todo lo que pesa sobre nosotros necesita una respuesta inmediata.',
+  'En medio de una etapa difícil, también podemos aprender a tratarnos con paciencia.',
+  'La vida no siempre sigue el ritmo que nosotros queremos.',
+  'Hay momentos en los que descansar también forma parte del camino.',
+  'No todas las batallas tienen que librarse de la misma manera.',
+  'A veces la claridad aparece después de dejar de exigirnos respuestas.',
+  'Cada persona atraviesa procesos que los demás no siempre pueden ver.',
+  'Hay silencios que nos permiten entender lo que el ruido no dejaba escuchar.',
+  'No necesitas demostrar tu valor todos los días.',
+  'Algunas etapas nos piden paciencia antes que velocidad.',
+  'Cuando todo parece incierto, todavía podemos elegir cómo responder.',
+  'Hay heridas que necesitan tiempo y no una explicación apresurada.',
+  'También existe fortaleza en reconocer que hoy necesitamos una pausa.',
+  'No todo cambio comienza con una gran decisión.',
+  'A veces una pequeña elección puede transformar la manera en que vivimos un día.',
+  'Compararnos puede hacernos olvidar cuánto hemos avanzado.',
+  'El camino de cada persona tiene un ritmo diferente.',
+  'Incluso los días normales pueden enseñarnos algo cuando aprendemos a observar.'
+ ];
+ const reflectionCore=[
+  'Lo importante es recordar que un momento difícil no representa toda nuestra historia.',
+  'Lo que hoy parece un retraso puede convertirse en una oportunidad para reorganizar nuestras prioridades.',
+  'Aceptar nuestros límites no significa rendirnos; significa reconocer dónde estamos para poder continuar.',
+  'No podemos controlar cada circunstancia, pero sí podemos decidir qué hacemos con ella.',
+  'El progreso no siempre se nota desde afuera, porque muchas veces ocurre primero dentro de nosotros.',
+  'Aprender a soltar una expectativa también puede abrir espacio para algo nuevo.',
+  'La paciencia no elimina las dificultades, pero puede cambiar la manera en que las atravesamos.',
+  'Nuestro valor no depende de la velocidad con la que conseguimos aquello que queremos.',
+  'Una equivocación puede convertirse en aprendizaje cuando dejamos de verla solamente como un fracaso.',
+  'A veces necesitamos menos presión y más comprensión hacia nosotros mismos.',
+  'No tenemos que compararnos con la vida de otra persona para reconocer nuestro propio avance.',
+  'Seguir adelante puede significar caminar despacio, descansar o volver a intentarlo.',
+  'La tranquilidad no siempre aparece cuando cambia el problema; a veces comienza cuando cambia nuestra mirada.',
+  'Perdonarnos por no haber sabido antes lo que hoy sabemos también es una forma de crecer.',
+  'No todas las respuestas llegan de inmediato, y eso no significa que estemos perdidos.',
+  'Hay aprendizajes que solamente aparecen después de atravesar aquello que no habríamos elegido.',
+  'Cuidarnos también implica reconocer cuándo debemos detenernos antes de agotarnos.',
+  'Un día complicado puede ser solamente un día complicado, no una sentencia sobre nuestro futuro.',
+  'Volver a empezar no borra lo vivido; demuestra que todavía existe un camino por recorrer.',
+  'La esperanza no exige que todo esté resuelto; a veces solamente necesita que demos el siguiente paso.'
+ ];
+ const reflectionClose=[
+  'Por eso, date permiso para avanzar a tu propio ritmo.',
+  'Quizá hoy lo que necesitas no sea correr, sino respirar y continuar cuando estés preparado.',
+  'Recuerda que también mereces la misma paciencia que tantas veces ofreces a los demás.',
+  'Tal vez este momento no sea permanente, aunque ahora parezca difícil imaginarlo.',
+  'Tu proceso no tiene que parecerse al de nadie más.',
+  'No permitas que un día difícil defina toda tu historia.',
+  'A veces avanzar comienza simplemente por no abandonarnos a nosotros mismos.',
+  'Puedes tomar una pausa sin renunciar a aquello que todavía quieres alcanzar.',
+  'Lo que hoy estás aprendiendo puede acompañarte mucho más adelante.',
+  'Siempre existe una nueva oportunidad para mirar la vida desde otra perspectiva.'
+ ];
+ const motivationLines=[
+  'No necesitas sentirte preparado para dar el primer paso. Empieza con lo que tienes y avanza desde ahí.',
+  'Los pequeños avances también construyen grandes cambios. La constancia puede llevarte más lejos que la prisa.',
+  'Un día difícil no cancela todo lo que has logrado. Mira también el camino que ya recorriste.',
+  'Deja de esperar el momento perfecto para comenzar. Muchas veces el momento se vuelve perfecto cuando decides actuar.',
+  'Tu esfuerzo de hoy puede transformar tu mañana, aunque todavía no puedas ver el resultado.',
+  'Cuando aparezca el miedo, recuerda por qué comenzaste y permite que esa razón te ayude a continuar.',
+  'Tu historia todavía tiene capítulos que no has escrito. Lo que hagas hoy puede formar parte de ellos.',
+  'Caer no significa que hayas perdido el camino. También puedes levantarte con una nueva experiencia.'
+ ];
+ const mysteryLines=[
+  `La historia de ${t} contiene un detalle que merece atención.`,
+  `Al principio, los hechos parecen seguir una explicación sencilla.`,
+  `Pero una pieza concreta comienza a cambiar esa interpretación.`,
+  `Los testimonios y las evidencias permiten reconstruir lo ocurrido.`,
+  `Algunos datos están confirmados, mientras otros siguen siendo discutidos.`,
+  `Una pista conduce hacia un lugar que resulta especialmente importante.`,
+  `El momento decisivo ocurre cuando aparece una nueva evidencia.`,
+  `Entonces, varias piezas de la historia comienzan a conectarse.`,
+  `Sin embargo, todavía queda un elemento difícil de explicar.`,
+  `Separar los hechos de las especulaciones resulta fundamental.`,
+  `Cada nueva pista modifica ligeramente la imagen del acontecimiento.`,
+  `Al final, algunas preguntas permanecen abiertas por falta de pruebas.`
+ ];
+ const historyLines=[
+  `Para entender ${t}, primero debemos conocer su contexto histórico.`,
+  `La época determinó la forma en que las personas vivían y actuaban.`,
+  `Las decisiones de ese momento tuvieron consecuencias posteriores.`,
+  `Los lugares y objetos ayudan a reconstruir aquella realidad.`,
+  `Cada acontecimiento debe entenderse dentro de las circunstancias de su tiempo.`,
+  `Una decisión aparentemente pequeña terminó teniendo efectos importantes.`,
+  `Con el paso de los años, la historia fue adquiriendo nuevos significados.`,
+  `Los documentos disponibles permiten conocer una parte de lo ocurrido.`,
+  `Otras cuestiones siguen siendo discutidas por los investigadores.`,
+  `Así se puede comprender mejor cómo llegó la historia hasta nosotros.`
+ ];
+ const scienceLines=[
+  `Para entender ${t}, primero debemos conocer el fenómeno que lo explica.`,
+  `La ciencia observa los hechos antes de construir una explicación.`,
+  `Cada evidencia ayuda a comprobar o descartar una posible respuesta.`,
+  `Algunos resultados pueden parecer extraños, pero tienen una explicación física.`,
+  `La escala y las condiciones del fenómeno son especialmente importantes.`,
+  `Los investigadores utilizan modelos para representar lo que no podemos observar directamente.`,
+  `Cuando aparece nueva evidencia, las explicaciones pueden ser revisadas.`,
+  `Por eso, una buena explicación también reconoce sus límites.`,
+  `Lo interesante está en comprender cómo funcionan realmente las cosas.`
+ ];
+ const carsLines=[
+  `Para entender ${t}, debemos seguir el proceso desde sus primeras etapas.`,
+  `Todo comienza con materiales que serán transformados paso a paso.`,
+  `Las máquinas realizan operaciones precisas para dar forma a cada componente.`,
+  `Después, distintas piezas comienzan a formar una estructura reconocible.`,
+  `Los robots y trabajadores coordinan cada etapa del proceso.`,
+  `La precisión resulta fundamental para que cada componente encaje correctamente.`,
+  `Más adelante, aparecen sistemas eléctricos, interiores y elementos de seguridad.`,
+  `Finalmente, el vehículo pasa por controles antes de abandonar la fábrica.`
+ ];
+ const bibleLines=[
+  `Para comprender ${t}, primero debemos conocer el contexto de la historia.`,
+  `El relato presenta personas que enfrentan decisiones, pruebas y consecuencias.`,
+  `Cada acontecimiento puede entenderse dentro de la enseñanza del pasaje.`,
+  `Los detalles del contexto ayudan a comprender mejor el mensaje.`,
+  `La dificultad que aparece pone a prueba la fe y las decisiones.`,
+  `En ese momento, una elección cambia el rumbo de la historia.`,
+  `La enseñanza no está solamente en lo que ocurrió, sino en su significado.`,
+  `Al mirar el relato con atención, aparecen lecciones aplicables a nuestra vida.`,
+  `El mensaje final invita a pensar en nuestras propias decisiones.`
+ ];
+ if(/reflexi|reflexión/.test(c)){
+   // Combina bancos diferentes para evitar frases idénticas y repeticiones consecutivas.
+   const mode=n%3;
+   if(mode===0) return reflectionOpen[Math.floor(n/3)%reflectionOpen.length];
+   if(mode===1) return reflectionCore[Math.floor(n/3)%reflectionCore.length];
+   return reflectionClose[Math.floor(n/3)%reflectionClose.length];
+ }
+ let lines=motivationLines;
+ if(/motiv|superación|superacion|desarrollo personal/.test(c)) lines=motivationLines;
+ else if(/biblia|bíblica|biblica|evangel/.test(c)) lines=bibleLines;
+ else if(/mister|curios|casos sin resolver|paranormal|ovni|conspir/.test(c)) lines=mysteryLines;
+ else if(/historia|arqueolog|civiliz|mito|leyenda/.test(c)) lines=historyLines;
+ else if(/ciencia|espacio|astronom|tecnología|tecnologia|inteligencia artificial/.test(c)) lines=scienceLines;
+ else if(/automóvil|automovil|coches|coche|cómo se fabrica|como se fabrica|ingenier/.test(c)) lines=carsLines;
+ else lines=mysteryLines;
+ return lines[n%lines.length];
+}
+
+function categoryVisual(topic,category,n){
+ const c=(category||'').toLowerCase();
+ if(/reflexi|motiv|superación|superacion|desarrollo personal/.test(c)) return `Visual emocional directamente relacionada con la idea expresada en la narración sobre ${topic}; persona realista en un entorno significativo, lenguaje corporal natural, composición contemplativa y metáfora visual sencilla, sin elementos aleatorios.`;
+ if(/biblia|bíblica|biblica|evangel/.test(c)) return `Reconstrucción visual bíblica directamente relacionada con ${topic}, con época, vestuario, arquitectura, paisaje y objetos históricamente plausibles.`;
+ if(/mister|curios|paranormal|ovni|casos sin resolver|conspir/.test(c)) return `Escena documental de investigación directamente relacionada con ${topic}, mostrando exactamente la pista, lugar, persona u objeto mencionado en la narración.`;
+ if(/historia|arqueolog|civiliz|mito|leyenda/.test(c)) return `Reconstrucción histórica directamente relacionada con ${topic}, mostrando el acontecimiento, lugar u objeto mencionado y evitando anacronismos.`;
+ if(/ciencia|espacio|astronom|tecnología|tecnologia|inteligencia artificial/.test(c)) return `Visualización científica o tecnológica directamente relacionada con ${topic}, mostrando el fenómeno, sistema u objeto explicado en la narración con proporciones plausibles.`;
+ if(/automóvil|automovil|coches|coche|cómo se fabrica|como se fabrica|ingenier/.test(c)) return `Escena industrial directamente relacionada con ${topic}, mostrando la máquina, pieza o etapa de fabricación que corresponde a la narración.`;
+ return `Imagen específica del tema ${topic}, mostrando exactamente el sujeto, acción, lugar u objeto descrito por la narración de esta escena.`;
+}
+
+function sceneData(topic,n,count){
+ const prev=n?`Continúa exactamente desde la escena ${n}: conserva la posición relativa de los personajes, dirección de movimiento, vestuario, objetos y luz.`:'Esta es la primera escena: establece claramente el mundo visual y los elementos que después deben mantenerse.';
+ const next=n<count-1?`Deja un elemento visual que pueda continuar en la escena ${n+2}: una mirada, movimiento, objeto o dirección de cámara.`:'Cierra la acción sin introducir un personaje o lugar nuevo que no haya sido preparado.';
+ const category=CURRENT_CATEGORY || detectCategory(topic);
+ let narration=categoryNarration(topic,category,n,count);
+ if(AI_SCRIPT){
+   const parts=(AI_SCRIPT.match(/[^.!?]+[.!?]+/g)||[AI_SCRIPT]).map(x=>x.trim()).filter(Boolean);
+   const idx=Math.min(parts.length-1,Math.floor(n*parts.length/Math.max(1,count)));
+   narration=parts[idx]||narration;
+ }
+ const visual=categoryVisual(topic,category,n);
+ const actions=[
+ 'El personaje camina lentamente hacia el punto principal mientras la cámara lo sigue desde atrás.',
+ 'El personaje se detiene y observa el entorno; la cámara pasa de un plano general a uno medio.',
+ 'El protagonista manipula o examina un objeto relevante y luego levanta la mirada.',
+ 'El personaje descubre la pista y extiende la mano o se aproxima para observarla.',
+ 'La acción continúa de forma natural y el protagonista cambia de dirección siguiendo la nueva información.',
+ 'El protagonista permanece inmóvil unos instantes, mira hacia fuera de cuadro y reacciona con cautela.',
+ 'La mano del protagonista acerca el objeto a la luz mientras el fondo permanece desenfocado.',
+ 'El investigador compara visualmente varios objetos mientras la cámara se desplaza lentamente de izquierda a derecha.',
+ 'Un movimiento de cámara revela el nuevo elemento oculto y el personaje reacciona al descubrirlo.',
+ 'La cámara une visualmente dos elementos de escenas anteriores mediante un movimiento de revelación.',
+ 'El protagonista respira, observa el entorno y permanece en silencio mientras el ambiente se estabiliza.',
+ 'El protagonista se aleja lentamente o la cámara se retira para dejar el escenario completo en pantalla.'
+ ];
+ const cameras=[
+ 'Plano general cinematográfico, lente equivalente 24 mm, cámara detrás del personaje, travelling lento hacia adelante.',
+ 'Plano medio progresivo, lente 35 mm, cámara a la altura de los ojos, desplazamiento lateral suave.',
+ 'Plano americano que pasa lentamente a primer plano, lente 50 mm, enfoque en el rostro y luego en el objeto.',
+ 'Primer plano del objeto con lente 85 mm, rack focus del fondo hacia la pista.',
+ 'Travelling lateral de 35 mm siguiendo la acción, con profundidad de campo moderada y parallax natural.',
+ 'Dolly-in lento de 50 mm, encuadre cerrado, dejando espacio negativo hacia la dirección de la mirada.',
+ 'Macro cinematográfico del detalle, lente 85–100 mm, profundidad de campo reducida y enfoque muy preciso.',
+ 'Plano secuencia suave de 35 mm, movimiento horizontal controlado y composición documental.',
+ 'Dolly lateral con revelación gradual, 35 mm, el objeto oculto entra en cuadro antes que el personaje.',
+ 'Plano de conexión con 50 mm, cámara gira lentamente para relacionar dos elementos del espacio.',
+ 'Plano fijo de 50 mm con respiración natural de cámara y mínima vibración documental.',
+ 'Gran plano general de 24 mm, cámara se aleja lentamente para dejar una composición final amplia.'
+ ];
+ const lights=[
+ 'Luz de amanecer lateral suave, sombras largas y atmósfera ligeramente húmeda.',
+ 'Luz natural difusa, contraste moderado y sombras coherentes con la dirección del sol.',
+ 'Luz cálida lateral sobre el personaje, fondo ligeramente más frío para separar planos.',
+ 'Rayo de luz dirigido sobre la pista, con polvo atmosférico muy sutil y sombras físicamente creíbles.',
+ 'Luz natural cambiante que conserva la misma dirección de la escena anterior.',
+ 'Contraste ligeramente mayor, zonas de sombra realistas y una fuente de luz visible fuera de cuadro.',
+ 'Luz lateral precisa sobre la textura del objeto, fondo desenfocado y exposición natural.',
+ 'Iluminación documental neutra, sin aspecto de estudio, con fuentes prácticas del entorno.',
+ 'Luz parcialmente bloqueada hasta que el nuevo elemento aparece en cuadro.',
+ 'Iluminación equilibrada que conecta visualmente los objetos vistos anteriormente.',
+ 'Luz suave y contemplativa, sin cambios bruscos de color.',
+ 'Luz de cierre cinematográfica coherente con el momento del día establecido al principio.'
+ ];
+ const emotions=['curiosidad y expectativa','orientación y atención','identificación y cercanía','descubrimiento','avance y determinación','inquietud','concentración','investigación','sorpresa contenida','comprensión','reflexión','cierre y contemplación'];
+ return {phase:phases[n%12],narration,visual,action:actions[n%12],camera:cameras[n%12],light:lights[n%12],emotion:emotions[n%12],continuity:prev+' '+next};
+}
+function promptDomain(topic){
+ const t=(topic||'').toLowerCase();
+ if(/biblia|jesús|jesus|cristo|moisés|moises|apocalipsis|evangelio|apóstol|apostol/.test(t)) return 'Biblical historical reconstruction: period-accurate ancient Near Eastern setting, clothing, architecture, tools, landscapes and culturally plausible human features; avoid modern objects.';
+ if(/misterio|ovni|extraterrestre|dyatlov|mh370|roanoke|desaparición|desaparicion|paranormal|conspir/.test(t)) return 'Investigative mystery documentary imagery: evidence-driven atmosphere, plausible locations and objects, restrained suspense, realistic physical clues, no invented supernatural certainty unless the narration explicitly describes it.';
+ if(/historia|civilización|civilizacion|roma|egipto|maya|azteca|arqueolog/.test(t)) return 'Historical reconstruction: period-accurate architecture, clothing, tools, materials, vehicles and environments for the exact era described; no anachronisms.';
+ if(/ciencia|espacio|astronom|universo|planeta|nasa/.test(t)) return 'Scientific visualization: physically plausible environments, scale, materials and phenomena; distinguish realistic visualization from artistic interpretation and avoid scientifically impossible details.';
+ if(/tecnología|tecnologia|inteligencia artificial|robot|futuro|cyber/.test(t)) return 'Technology-focused visual language: accurate hardware details, believable interfaces without readable text, realistic materials, lighting and engineering proportions.';
+ if(/automóvil|automovil|coches|coche|fabrica|fabricación|fabricacion|ingenier/.test(t)) return 'Industrial documentary reconstruction: realistic machinery, materials, factory architecture, safety equipment and manufacturing processes appropriate to the exact subject.';
+ if(/naturaleza|animal|océano|oceano|mar|selva|tierra/.test(t)) return 'Natural-history documentary imagery: anatomically plausible animals, realistic habitats, weather, vegetation, water, geology and natural behavior.';
+ if(/terror|horror|fantasma|demonio/.test(t)) return 'Cinematic horror imagery: believable environments, restrained visual tension, realistic anatomy and physical spaces, atmospheric suspense without gratuitous gore.';
+ if(/reflexión|reflexion|motivación|motivacion|superación|superacion|vida/.test(t)) return 'Emotional cinematic storytelling: believable people, expressive but natural body language, meaningful environments and visual metaphors directly tied to the narration.';
+ return 'Subject-specific documentary cinematography: every visible element must directly represent the exact topic and the information narrated in this scene; avoid generic filler imagery.';
+}
+function flowPrompt(topic,style,fmt,bible,d,n){
+ const ratio=fmt.startsWith('9:16')?'vertical 9:16':'horizontal 16:9';
+ const guide=consistencyGuide(topic,style,fmt);
+ const domain=promptDomain(topic);
+ return `${guide}\n\nSCENE ${n+1} — CREATE ONE IMAGE ONLY.\nTOPIC LOCK: "${topic}". DOMAIN DIRECTION: ${domain}\nSTYLE: ${style}. FORMAT: ${ratio}.\nNARRATION FOR THIS EXACT SCENE: "${d.narration}"\nVISUALIZE THE NARRATION: ${d.visual} The image must depict the specific people, place, object, event or action actually described by the narration and by the topic "${topic}". Do not substitute a generic scene, unrelated stock imagery, random characters or a different subject.\nACTION: ${d.action}\nCHARACTER AND CONTINUITY: ${bible}\nCAMERA: ${d.camera}\nLIGHTING: ${d.light}\nEMOTION: ${d.emotion}\nCONTINUITY: Continue exactly from the previous scene. Preserve established identities, wardrobe, props, location, time period, time of day, weather, screen direction and physical positions. Only change what this scene's narration requires.\nVISUAL ACCURACY: prioritize the exact subject and facts implied by the narration; if the topic names a real place, historical period, animal, machine or object, depict that specific subject rather than a generic approximation.\nOUTPUT: Generate ONE single coherent image for this scene, never a collage, contact sheet, storyboard, split screen, multiple panels or multiple scenes in one image. No text, subtitles, logos or watermarks. ${style}. Realistic materials, believable physics, natural skin and fabric, coherent exposure, atmospheric depth and professional cinematography.`;
+}
+
+
+function selectedCategory(){
+  const v=$('categorySelect')?.value || '';
+  return v==='__MANUAL__' ? 'Tema manual' : (v || detectCategory($('topic')?.value||''));
+}
+
+function applyCategoryToTopic(){
+  CURRENT_CATEGORY=selectedCategory();
+  const cat=$('categoryUsed');
+  if(cat) cat.textContent='📚 CATEGORÍA: '+CURRENT_CATEGORY;
+}
+
+function detectCategory(topic){
+  const t=(topic||'').toLowerCase();
+  const bible=['biblia','dios','jesús','jesus','cristo','evangelio','apóstol','apostol','moisés','moises','salmos','proverbios','génesis','genesis','éxodo','exodo','profecía','profecia','parábola','parabola','versículo','versiculo','antiguo testamento','nuevo testamento'];
+  const mystery=['misterio','misterios','curiosidad','curiosidades','enigma','enigmas','desaparición','desaparicion','caso inexplicable','casos inexplicables','ovni','ovnis','señal wow','roanoke','dyatlov','mh370','mary celeste','atlántida','atlantida','el dorado','nazca'];
+  const reflection=['reflexión','reflexion','reflexiones','motivación','motivacion','vida','enseñanza','enseñanzas','superación','superacion','frase'];
+  if(bible.some(k=>t.includes(k))) return 'Biblia';
+  if(mystery.some(k=>t.includes(k))) return 'Misterios y curiosidades';
+  if(reflection.some(k=>t.includes(k))) return 'Reflexión';
+  return CURRENT_CATEGORY || 'Misterios y curiosidades';
+}
+
+function nextTopicForCategory(category, current){
+  const lists={
+    "Biblia": [
+        "La parábola del sembrador",
+        "El arca de Noé",
+        "La historia de David y Goliat",
+        "El significado de las diez plagas de Egipto",
+        "Daniel en el foso de los leones",
+        "El éxodo de Egipto",
+        "Jonás y el gran pez",
+        "El misterio de los tres días de Jesús",
+        "Las siete palabras de Jesús en la cruz",
+        "El libro de Apocalipsis y sus símbolos"
+    ],
+    "Misterios": [
+        "El misterio del vuelo MH370",
+        "La colonia perdida de Roanoke",
+        "El misterio del paso Dyatlov",
+        "El barco Mary Celeste",
+        "La señal Wow!"
+    ],
+    "Reflexiones": [
+        "El valor de no rendirse",
+        "Cuando sientes que todo sale mal",
+        "Aprender a soltar lo que no puedes controlar",
+        "El poder de agradecer cada día",
+        "Cómo recuperar la esperanza"
+    ],
+    "Reflexión bíblica": [
+        "David frente a Goliat: una lección sobre la fe",
+        "José y el perdón a sus hermanos",
+        "Pedro caminando sobre el agua",
+        "El buen samaritano y la compasión",
+        "La historia de Ester y el valor"
+    ],
+    "Reflexión del día": [
+        "Una reflexión para comenzar el día con esperanza",
+        "Cómo encontrar paz en un día difícil",
+        "Una palabra para cuando estás cansado",
+        "El valor de agradecer lo que tienes",
+        "Cuando necesitas volver a empezar"
+    ],
+    "Curiosidades": [
+        "10 cosas sorprendentes que ocurren mientras duermes",
+        "Por qué los aviones dejan estelas en el cielo",
+        "10 datos increíbles sobre el cuerpo humano",
+        "Por qué el cielo cambia de color",
+        "Cosas cotidianas que tienen una explicación sorprendente"
+    ],
+    "Historia": [
+        "Los acontecimientos que cambiaron el mundo",
+        "Cómo vivían las personas hace 1000 años",
+        "Las grandes ciudades de la antigüedad",
+        "Inventos que transformaron la historia",
+        "Misterios históricos que aún se investigan"
+    ],
+    "Ciencia": [
+        "Experimentos que cambiaron nuestra comprensión del universo",
+        "Por qué el tiempo parece pasar más rápido al crecer",
+        "Cómo funciona la gravedad",
+        "Los descubrimientos científicos más sorprendentes",
+        "Qué ocurre dentro de una estrella"
+    ],
+    "Espacio y astronomía": [
+        "Qué pasaría si la Tierra dejara de girar",
+        "El nacimiento y muerte de una estrella",
+        "Los lugares más extremos del sistema solar",
+        "Qué sabemos de los agujeros negros",
+        "La búsqueda de vida fuera de la Tierra"
+    ],
+    "Tecnología": [
+        "Cómo funciona un teléfono inteligente",
+        "La evolución de los robots",
+        "Cómo viaja la información por internet",
+        "Tecnologías que cambiaron la vida cotidiana",
+        "Cómo funcionan los satélites"
+    ],
+    "Inteligencia artificial": [
+        "Cómo aprende una inteligencia artificial",
+        "Cómo se crean imágenes con IA",
+        "Qué es un modelo de lenguaje",
+        "Cómo cambiará la IA el trabajo creativo",
+        "Cómo funciona un asistente de IA"
+    ],
+    "Naturaleza": [
+        "Los lugares naturales más extremos del planeta",
+        "Cómo se comunican los árboles",
+        "Animales con habilidades extraordinarias",
+        "Qué ocurre durante una tormenta",
+        "Los ecosistemas más sorprendentes"
+    ],
+    "Animales": [
+        "Animales capaces de sobrevivir en condiciones extremas",
+        "Cómo se orientan las aves migratorias",
+        "Los sentidos más extraordinarios del reino animal",
+        "Cómo cazan los grandes depredadores",
+        "Animales que parecen sacados de una película"
+    ],
+    "Viajes": [
+        "Lugares que parecen de otro planeta",
+        "Ciudades con historias sorprendentes",
+        "Los caminos más impresionantes del mundo",
+        "Destinos poco conocidos que sorprenden",
+        "Viajes para descubrir culturas diferentes"
+    ],
+    "Psicología": [
+        "Por qué recordamos algunas cosas y olvidamos otras",
+        "Cómo se forman los hábitos",
+        "Por qué sentimos miedo",
+        "Qué ocurre cuando tomamos decisiones",
+        "Cómo funciona la atención humana"
+    ],
+    "Motivación": [
+        "Cómo seguir adelante cuando algo sale mal",
+        "El poder de empezar con algo pequeño",
+        "Cómo convertir un fracaso en aprendizaje",
+        "Por qué la constancia importa",
+        "Cuando nadie cree en tu sueño"
+    ],
+    "Superación personal": [
+        "Cómo recuperar la confianza en ti mismo",
+        "Aprender a salir de la zona de confort",
+        "Cómo superar el miedo a empezar",
+        "El valor de ser constante",
+        "Cómo convertir obstáculos en aprendizaje"
+    ],
+    "Historias de vida": [
+        "Una historia de perseverancia",
+        "La persona que comenzó desde cero",
+        "Una segunda oportunidad que cambió una vida",
+        "El día que una decisión cambió todo",
+        "Una historia sobre nunca rendirse"
+    ],
+    "Filosofía": [
+        "Qué significa vivir una buena vida",
+        "Por qué buscamos sentido a lo que hacemos",
+        "La importancia de conocer tus límites",
+        "Qué podemos aprender de nuestros errores",
+        "El valor de hacer preguntas"
+    ],
+    "Datos sorprendentes": [
+        "10 datos del mundo que parecen imposibles",
+        "10 hechos sorprendentes sobre el océano",
+        "10 curiosidades sobre el espacio",
+        "10 datos históricos que sorprenden",
+        "10 cosas que probablemente no sabías"
+    ],
+    "Casos sin resolver": [
+        "Misterios históricos que siguen abiertos",
+        "Desapariciones que todavía generan preguntas",
+        "Casos extraños que siguen sin explicación definitiva",
+        "Enigmas arqueológicos pendientes",
+        "Preguntas que la historia todavía no responde"
+    ],
+    "Crímenes históricos": [
+        "Grandes casos criminales de la historia",
+        "Crímenes históricos que cambiaron investigaciones",
+        "Casos famosos y lo que ocurrió después",
+        "Cómo se investigaban los crímenes antes de la tecnología moderna",
+        "Historias criminales documentadas que siguen siendo estudiadas"
+    ],
+    "Leyendas": [
+        "La leyenda de El Dorado",
+        "La leyenda del rey Arturo",
+        "Historias legendarias de pueblos antiguos",
+        "Leyendas que viajaron entre generaciones",
+        "El origen de una leyenda famosa"
+    ],
+    "Mitos": [
+        "Mitos de la antigua Grecia",
+        "Mitos nórdicos y sus personajes",
+        "Cómo nacen los mitos",
+        "Mitos que intentaban explicar fenómenos naturales",
+        "Mitos antiguos que todavía conocemos"
+    ],
+    "Cómo se fabrica": [
+        "Cómo se fabrica un automóvil",
+        "Cómo se fabrica una botella de vidrio",
+        "Cómo se fabrica un teléfono",
+        "Cómo se fabrica una bicicleta",
+        "Cómo se fabrica el acero"
+    ],
+    "Automóviles": [
+        "Cómo se fabrica un automóvil moderno",
+        "Cómo funciona una línea de ensamblaje",
+        "Cómo se pinta un automóvil en una fábrica",
+        "Cómo se prueba un automóvil antes de salir",
+        "Cómo funciona un motor de combustión"
+    ],
+    "Ingeniería": [
+        "Cómo se construye un puente moderno",
+        "Cómo funciona una presa",
+        "La ingeniería detrás de un rascacielos",
+        "Cómo se construye un túnel",
+        "Máquinas que hicieron posible grandes obras"
+    ],
+    "Negocios": [
+        "Cómo nace una empresa desde cero",
+        "Cómo funciona una fábrica moderna",
+        "Cómo se construye una marca",
+        "Cómo toman decisiones las empresas",
+        "Historias de negocios que cambiaron industrias"
+    ],
+    "Finanzas personales": [
+        "Cómo organizar tus gastos",
+        "Qué es un fondo de emergencia",
+        "Cómo funciona el interés compuesto",
+        "Errores comunes al administrar dinero",
+        "Cómo establecer metas financieras"
+    ],
+    "Salud y bienestar": [
+        "Cómo mejorar tus hábitos de sueño",
+        "La importancia de la actividad física",
+        "Cómo reducir el estrés cotidiano",
+        "Hábitos sencillos para cuidar tu bienestar",
+        "Cómo crear una rutina saludable"
+    ],
+    "Alimentación": [
+        "Cómo se transforma un alimento desde el campo hasta tu mesa",
+        "Curiosidades sobre frutas y verduras",
+        "Cómo funciona la conservación de alimentos",
+        "La historia de algunos alimentos cotidianos",
+        "Qué ocurre durante la digestión"
+    ],
+    "Deportes": [
+        "Cómo nació un deporte famoso",
+        "Historias sorprendentes del deporte",
+        "Cómo entrenan los atletas",
+        "Récords deportivos que marcaron una época",
+        "La ciencia detrás del rendimiento deportivo"
+    ],
+    "Música": [
+        "Cómo nació un género musical",
+        "Cómo se graba una canción",
+        "Instrumentos con historias sorprendentes",
+        "Cómo funciona el ritmo musical",
+        "Grandes cambios en la historia de la música"
+    ],
+    "Cine y televisión": [
+        "Cómo se crea una película",
+        "Los secretos de los efectos visuales",
+        "Cómo se graba una escena de acción",
+        "La evolución del cine",
+        "Cómo funciona una producción cinematográfica"
+    ],
+    "Libros": [
+        "Cómo nace un libro",
+        "Libros que cambiaron la historia",
+        "Cómo se construye una novela",
+        "La historia de las bibliotecas",
+        "Por qué algunas historias permanecen durante siglos"
+    ],
+    "Arte": [
+        "Cómo nació un movimiento artístico",
+        "Los secretos de una gran pintura",
+        "Cómo trabajan los restauradores",
+        "Arte que cambió la historia",
+        "Cómo se crea una escultura"
+    ],
+    "Educación": [
+        "Cómo aprende el cerebro",
+        "Métodos de estudio que ayudan a organizar el aprendizaje",
+        "La historia de la escuela",
+        "Cómo enseñar una idea difícil",
+        "Curiosidades sobre la memoria"
+    ],
+    "Productividad": [
+        "Cómo organizar tu día",
+        "Cómo evitar distracciones",
+        "El poder de las pequeñas rutinas",
+        "Cómo dividir una tarea grande",
+        "Cómo crear una rutina sostenible"
+    ],
+    "Terror": [
+        "Historias de terror basadas en leyendas",
+        "Lugares con historias inquietantes",
+        "El origen de algunas historias de terror",
+        "Misterios que inspiraron relatos de terror",
+        "Historias extrañas de pueblos antiguos"
+    ],
+    "Paranormal": [
+        "Historias paranormales y sus testimonios",
+        "Casas con leyendas misteriosas",
+        "Fenómenos que algunas personas consideran paranormales",
+        "El origen de las historias de fantasmas",
+        "Casos paranormales famosos y sus explicaciones propuestas"
+    ],
+    "Ovnis y extraterrestres": [
+        "El misterio de la señal Wow!",
+        "Cómo se buscan señales de vida en el espacio",
+        "Casos de avistamientos y lo que está documentado",
+        "Qué necesitaríamos para detectar vida extraterrestre",
+        "La historia de la búsqueda de vida fuera de la Tierra"
+    ]
+};
+  const list=lists[category] || [
+    `10 ideas sorprendentes sobre ${category}`,
+    `La historia y los secretos de ${category}`,
+    `Lo que casi nadie sabe sobre ${category}`,
+    `5 datos increíbles sobre ${category}`,
+    `Cómo funciona el mundo de ${category}`
+  ];
+  const used=usedTopics(category);
+  const usedKeys=new Set(used.map(x=>String(x).trim().toLowerCase()));
+  const currentKey=String(current||'').trim().toLowerCase();
+
+  // Primero recorre la lista fija y toma el primer tema que nunca se haya usado.
+  const available=list.filter(x=>!usedKeys.has(String(x).trim().toLowerCase()));
+  if(available.length) return available[0];
+
+  // Cuando la lista fija se agota, crea temas nuevos a partir de combinaciones
+  // y comprueba el historial para evitar repetirlos.
+  const bases=[
+    `La historia detrás de ${category}`,
+    `Lo que casi nadie conoce sobre ${category}`,
+    `El lado desconocido de ${category}`,
+    `Preguntas que todavía existen sobre ${category}`,
+    `10 detalles sorprendentes de ${category}`,
+    `Lo que cambió para siempre la historia de ${category}`,
+    `Cómo comenzó todo con ${category}`,
+    `Los secretos mejor documentados de ${category}`,
+    `Qué sabemos realmente sobre ${category}`,
+    `Una historia sorprendente relacionada con ${category}`
+  ];
+  const angles=[
+    'que pocos conocen','que merece ser contado','explicado de forma sencilla',
+    'paso a paso','con datos sorprendentes','y las preguntas que dejó',
+    'desde sus orígenes','y lo que ocurrió después','que cambió una época',
+    'que todavía despierta curiosidad','visto desde otra perspectiva','que sorprendió a los investigadores'
+  ];
+  const offset=used.length;
+  for(let i=0;i<10000;i++){
+    const b=bases[(offset+i)%bases.length];
+    const a=angles[Math.floor((offset+i)/bases.length)%angles.length];
+    const candidate=`${b}, ${a}`;
+    if(!usedKeys.has(candidate.toLowerCase())) return candidate;
+  }
+  return `${category}: nueva historia ${used.length+1}`;
+}
+
+function resetCurrentCategory(){
+  const category=selectedCategory();
+  if(!confirm('¿Reiniciar el historial de temas de '+category+'? Esto permitirá volver a usar sus temas.')) return;
+  clearTopicHistory(category);
+  const next=topicForCategory(category);
+  $('topic').value=next;
+  CURRENT_TOPIC=next;
+  markTopicUsed(category,next);
+  saveTopicProgress(category,next);
+  CURRENT_SCRIPT='';
+  if($('scriptBox')){$('scriptBox').value='';$('scriptBox').style.display='none';}
+  refreshHistoryUI();
+  $('status').style.display='block';
+  $('status').textContent='Categoría reiniciada. Nuevo tema: '+next;
+  $('fill').style.width='0%';
+}
+function nextTopic(){
+  const current=$('topic').value.trim();
+  const category=selectedCategory();
+  CURRENT_CATEGORY=category;
+  const next=nextTopicForCategory(category,current);
+  $('topic').value=next;
+  CURRENT_TOPIC=next;
+  markTopicUsed(category,next);
+  saveTopicProgress(category,next);
+  refreshHistoryUI();
+  CURRENT_SCRIPT="";
+  if($('scriptBox')){$('scriptBox').value='';$('scriptBox').style.display='none';}
+  const cat=$('categoryUsed');
+  if(cat) cat.textContent='📚 CATEGORÍA: '+category;
+  $('topic').dispatchEvent(new Event('input',{bubbles:true}));
+  $('topic').dispatchEvent(new Event('change',{bubbles:true}));
+  $('status').style.display='block';
+  $('status').textContent='Siguiente tema de '+category+': '+next+' — pulsa CREAR PROYECTO.';
+  $('fill').style.width='0%';
+}
+
+function nextScript(){
+  const topic=$('topic').value.trim();
+  if(!topic){alert('Escribe primero un tema.');return}
+  CURRENT_TOPIC=topic;
+  CURRENT_CATEGORY=selectedCategory();
+  const script=makeScript(topic);
+  CURRENT_SCRIPT=script;
+  const box=$('scriptBox');
+  if(box){
+    box.value=script;
+    box.style.display='block';
+    box.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+  createProject();
+}
+
+function makeScript(topic){
+ const category=CURRENT_CATEGORY || detectCategory(topic);
+ const c=(category||'').toLowerCase();
+ if(/reflexi|reflexión/.test(c)) return `GUION — ${topic}\n\nAPERTURA:\nA veces, la vida nos obliga a detenernos y mirar hacia dentro.\n\nDESARROLLO:\n${topic} puede hacernos pensar en aquello que estamos viviendo y en la manera en que respondemos ante las dificultades. No siempre entendemos una experiencia mientras sucede, pero con el tiempo podemos descubrir una enseñanza.\n\nREFLEXIÓN:\nNo necesitas tener todas las respuestas para seguir avanzando. También es válido descansar, soltar lo que no puedes controlar y reconocer el valor de cada pequeño paso.\n\nAPLICACIÓN:\nLo importante no es que todo salga perfecto, sino aprender a mirar cada etapa con más paciencia, gratitud y esperanza.\n\nCIERRE:\nRecuerda que este momento tampoco será para siempre. Tu historia continúa, y todavía puedes decidir cómo vivir el siguiente capítulo.`;
+ if(/motiv|superación|superacion/.test(c)) return `GUION — ${topic}\n\nAPERTURA:\nNo necesitas sentirte preparado para dar el primer paso.\n\nDESARROLLO:\n${topic} nos recuerda que los grandes cambios suelen comenzar con decisiones pequeñas. Habrá días de avance y otros de dificultad, pero ambos forman parte del proceso.\n\nAPRENDIZAJE:\nLa constancia puede llevarte más lejos que la prisa. Cada intento, incluso cuando no sale como esperabas, puede enseñarte algo útil.\n\nCIERRE:\nNo compares tu camino con el de otra persona. Sigue avanzando con paciencia y recuerda por qué comenzaste.`;
+ return `GUION — ${topic}\n\nAPERTURA:\n${openingHook(topic)}\n\nCONTEXTO:\nPrimero conoceremos el contexto y los elementos directamente relacionados con el tema.\n\nDESARROLLO:\nA medida que avanzan los acontecimientos, aparecerán los datos, acciones y detalles que permiten comprender la historia.\n\nCIERRE:\nAl final, separaremos lo que conocemos de aquello que todavía permanece abierto.`;
+}
+
+let FLOW_BATCHES=[];
+function getSceneRecords(){
+  const nodes=[...document.querySelectorAll('#scenes .scene')];
+  return nodes.map((el,i)=>({
+    number:i+1,
+    title:el.querySelector('h3')?.innerText?.replace(/🎥 Prompt Flow|Copiar|🖼️ Flow/g,'').trim()||`ESCENA ${String(i+1).padStart(2,'0')}`,
+    prompt:el.querySelector('.prompt')?.innerText?.trim()||'',
+    narration:el.querySelector('.section')?.nextElementSibling?.innerText?.trim()||'',
+    full:el.innerText?.trim()||''
+  }));
+}
+function getNarrationText(){
+  const nodes=[...document.querySelectorAll('#scenes .scene')];
+  return nodes.map(el=>el.querySelector('.section')?.nextElementSibling?.innerText?.trim()||'').filter(Boolean).join('\n\n');
+}
+function updateNarrationBox(){
+  const box=$('narrationText');
+  if(box) box.textContent=getNarrationText()||'La narración aparecerá aquí cuando crees el proyecto.';
+}
+async function copyConsistencyGuide(){
+ const text=$('consistencyGuide')?.textContent?.trim()||'';
+ if(!text){alert('Primero crea el proyecto para generar la guía.');return;}
+ const ok=await copyText(text);
+ if(ok)alert('✓ Prompt guía de consistencia copiado.');
+}
+async function copyNarration(){
+  const text=getNarrationText();
+  if(!text){alert('Primero crea el proyecto y sus escenas.');return;}
+  const ok=await copyText(text);
+  if(ok)alert('✓ Narración completa copiada. Solo contiene la narración.');
+}
+function downloadNarration(){
+  const text=getNarrationText();
+  if(!text){alert('Primero crea el proyecto y sus escenas.');return;}
+  const blob=new Blob([text],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='Narracion.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+}
+function prepareBatches(){
+  const scenes=getSceneRecords();
+  if(!scenes.length){alert('Primero crea el proyecto y sus escenas.');return;}
+  const size=Math.max(1,+$('batchSize').value||10);
+  const mode=$('batchFormat').value;
+  FLOW_BATCHES=[];
+  for(let i=0;i<scenes.length;i+=size){
+    const group=scenes.slice(i,i+size);
+    const text=group.map(x=>mode==='prompt'?`ESCENA ${String(x.number).padStart(2,'0')}\n${x.prompt}`:`ESCENA ${String(x.number).padStart(2,'0')}\n${x.full}`).join('\n\n------------------------------\n\n');
+    FLOW_BATCHES.push({index:FLOW_BATCHES.length+1,start:group[0].number,end:group[group.length-1].number,text,count:group.length});
+  }
+  renderBatches();
+}
+function renderBatches(){
+  const box=$('batchList');
+  box.innerHTML=FLOW_BATCHES.length?FLOW_BATCHES.map(b=>`<div class="batch-item"><div class="batch-head"><div><div class="batch-title">📦 LOTE ${b.index}</div><div class="batch-meta">Escenas ${b.start}–${b.end} · ${b.count} prompts</div></div></div><div class="batch-actions"><button class="btn dark" onclick="copyBatch(${b.index})">📋 COPIAR PROMPTS DEL LOTE ${b.index}</button><button class="btn dark" onclick="copyBatchNarration(${b.index})">🎙️ COPIAR NARRACIÓN</button><button class="btn dark" onclick="openGoogleFlow()">🖼️ ABRIR FLOW</button></div><div class="batch-code">${esc(b.text)}</div></div>`).join(''):'<div class="history-empty">Pulsa “PREPARAR LOTES” para organizar las escenas. Cada prompt se copiará de forma independiente desde su escena.</div>';
+}
+async function copyBatchNarration(index){
+  const b=FLOW_BATCHES.find(x=>x.index===index); if(!b)return;
+  const scenes=getSceneRecords().filter(x=>x.number>=b.start&&x.number<=b.end);
+  const text=scenes.map(x=>x.narration||'').filter(Boolean).join('\n\n');
+  const ok=await copyText(text);
+  if(ok)alert(`✓ Narración del lote ${index} copiada: escenas ${b.start}–${b.end}.`);
+}
+
+async function copyText(text){
+  text=String(text||'');
+  if(!text){alert('No hay texto para copiar.');return false;}
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  }catch(e){}
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=text; ta.setAttribute('readonly','');
+    ta.style.position='fixed'; ta.style.top='0'; ta.style.left='-9999px';
+    ta.style.opacity='0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select(); ta.setSelectionRange(0,ta.value.length);
+    const ok=document.execCommand('copy');
+    ta.remove();
+    if(ok)return true;
+  }catch(e){}
+  // Último recurso: deja el lote seleccionado para que el usuario pulse Copiar.
+  try{
+    const ta=document.createElement('textarea');
+    ta.value=text; ta.style.position='fixed'; ta.style.top='10px'; ta.style.left='10px';
+    ta.style.width='90vw'; ta.style.height='60vh'; ta.style.zIndex='99999';
+    ta.style.background='#111'; ta.style.color='#fff'; ta.style.padding='15px';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    alert('El navegador bloqueó la copia automática. El texto quedó seleccionado: pulsa “Copiar” en el menú de tu teléfono.');
+    return false;
+  }catch(e){alert('No se pudo copiar el lote. Mantén pulsado el texto y selecciona Copiar.');return false;}
+}
+async function copyBatch(index){
+  const b=FLOW_BATCHES.find(x=>x.index===index); if(!b)return;
+  const ok=await copyText(b.text);
+  if(ok)alert(`✓ Lote ${index} copiado: escenas ${b.start}–${b.end}. Ahora puedes pegarlo en Google Flow.`);
+}
+async function copyAllBatches(){
+  if(!FLOW_BATCHES.length)prepareBatches();
+  if(!FLOW_BATCHES.length)return;
+  const text=FLOW_BATCHES.map(b=>`===== LOTE ${b.index} · ESCENAS ${b.start}–${b.end} =====\n\n${b.text}`).join('\n\n\n');
+  const ok=await copyText(text);
+  if(ok)alert('✓ Todos los lotes fueron copiados. Ahora puedes pegarlos en Google Flow.');
+}
+function downloadBatchesTxt(){
+  if(!FLOW_BATCHES.length)prepareBatches();
+  if(!FLOW_BATCHES.length)return;
+  const text=FLOW_BATCHES.map(b=>`===== LOTE ${b.index} · ESCENAS ${b.start}–${b.end} =====\n\n${b.text}`).join('\n\n\n');
+  const blob=new Blob([text],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='Google_Flow_Lotes.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500);
+}
+function openGoogleFlow(){window.open('https://labs.google/flow','_blank','noopener');}
+function openSceneFlow(btn){
+  const s=btn.closest('.scene');
+  const prompt=s?.querySelector('.prompt')?.innerText?.trim()||'';
+  if(!prompt)return;
+  copyText(prompt).then(ok=>{if(ok)alert('✓ Prompt copiado. Se abrirá Google Flow para que lo pegues.');openGoogleFlow();});
+}
+
+function copyScene(btn,mode){
+ const s=btn.closest('.scene');
+ let text=mode==='prompt'?s.querySelector('.prompt').innerText:s.innerText;
+ copyText(text).then(ok=>{const old=btn.textContent;if(ok)btn.textContent='✓ Copiado';setTimeout(()=>btn.textContent=old,900);});
+}
+function copyAll(){copyText(window.project||'').then(ok=>{if(ok)alert('✓ Proyecto completo copiado.')})}
+function downloadTxt(){const blob=new Blob([window.project||''],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='AI_Video_Studio_FLOW_V4.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+</script>
+</body>
+</html>
