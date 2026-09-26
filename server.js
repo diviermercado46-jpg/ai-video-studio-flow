@@ -53,7 +53,7 @@ function claudeSources(data) {
 }
 function uniqueSources(out){ return [...new Map((out||[]).filter(x=>x&&x.url).map(x=>[x.url,x])).values()]; }
 async function fetchText(url, options={}) {
-  const r=await fetch(url,{...options,headers:{'User-Agent':'AI-Video-Studio-FLOW/29 (research)','Accept':'text/xml,application/xml,text/html,application/json;q=0.9,*/*;q=0.8',...(options.headers||{})}});
+  const r=await fetch(url,{...options,headers:{'User-Agent':'AI-Video-Studio-FLOW/36 (research)','Accept':'text/xml,application/xml,text/html,application/json;q=0.9,*/*;q=0.8',...(options.headers||{})}});
   if(!r.ok) throw new Error(`HTTP ${r.status} al consultar ${url}`);
   return await r.text();
 }
@@ -183,7 +183,7 @@ function providerOrder(requested){
 async function main() {
   const server=http.createServer(async (req,res)=>{
     if(req.method==='OPTIONS') { res.writeHead(204,{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'GET,POST,OPTIONS'}); return res.end(); }
-    if(req.method==='GET' && req.url==='/health') return json(res,200,{ok:true,service:'AI Video Studio FLOW',version:'34.0',providers:{openrouter:!!keyFor('openrouter'),gemini:!!keyFor('gemini'),openai:!!keyFor('openai'),claude:!!keyFor('claude')}});
+    if(req.method==='GET' && req.url==='/health') return json(res,200,{ok:true,service:'AI Video Studio FLOW',version:'36.0',providers:{openrouter:!!keyFor('openrouter'),gemini:!!keyFor('gemini'),openai:!!keyFor('openai'),claude:!!keyFor('claude')}});
     if(req.method==='POST' && req.url==='/api/research') {
       try {
         const body=await readBody(req);
@@ -211,7 +211,7 @@ const reflectionRules = isReflectionMode ? `\n\nREGLAS V33 — MODO REFLEXIÓN: 
             if(provider==='openai' && !model) model='gpt-5.6-luna';
             if(provider==='claude' && !model) model='claude-sonnet-4-6';
             const result=await callProvider(provider,model,enrichedPrompt);
-            return json(res,200,{ok:true,version:'34.0',provider,providerLabel:providerLabel(provider),model,text:result.text,sources:uniqueSources([...(externalSources||[]),...(result.sources||[])]),fallbacksTried:errors.map(x=>x.provider),webSearch:{ok:externalSources.length>0,count:externalSources.length}});
+            return json(res,200,{ok:true,version:'36.0',provider,providerLabel:providerLabel(provider),model,text:result.text,sources:uniqueSources([...(externalSources||[]),...(result.sources||[])]),fallbacksTried:errors.map(x=>x.provider),webSearch:{ok:externalSources.length>0,count:externalSources.length}});
           }catch(e){
             errors.push({provider,message:e.message||'Error'});
             console.error(`${provider}:`,e.message);

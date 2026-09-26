@@ -1,10 +1,19 @@
-AI Video Studio FLOW V33
+AI VIDEO STUDIO FLOW V36
 
-Cambio principal: MODO REFLEXIÓN separado del modo investigación.
-Las categorías Reflexión del día, Reflexiones, Motivación y Superación personal generan reflexión original sin investigación web, salvo que el usuario pida explícitamente fuentes, personas, fechas o datos.
+Versión corregida y empaquetada para Render.
+Archivos principales:
+- index.html
+- server.js
+- package.json
 
-Las categorías documentales/misterio/historia/ciencia/etc. conservan la investigación web y trazabilidad.
+Para Render:
+Build Command: npm install
+Start Command: npm start
+No pongas las API keys en index.html. Configúralas en Render > Environment.
 
-Despliegue: Node/Render. Variables opcionales: OPENROUTER_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY.
-
-V34: muestra qué motores tienen clave configurada y, tras cada investigación, qué motor se utilizó y qué fallbacks fallaron antes.
+V36 incluye:
+- endpoint /health
+- endpoint POST /api/research
+- modo reflexión sin investigación web
+- modo investigación con fuentes
+- fallback de proveedores configurados
