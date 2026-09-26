@@ -341,7 +341,7 @@ async function runAIResearch(topic){
  const category=selectedCategory(), duration=$('dur').value, style=$('style').value;
  const depth=$('aiDepth').value;
  const isReflection=/reflexión|reflexion|motivación|motivacion|superación|superacion|reflexiones|reflexiones del día|reflexion del dia/i.test(category);
- const reflectionInstruction=isReflection?`\n\nMODO REFLEXIÓN V31 — prioridad máxima: esto es una reflexión motivacional para voz en off, NO un documental. El objetivo es emocionar, acompañar y dejar una idea memorable. NO conviertas el texto en una investigación histórica. NO introduzcas escritores, atletas, celebridades, personajes, fechas, libros, novelas, citas textuales, estudios ni acontecimientos históricos solo para adornar la reflexión. NO uses nombres propios ni datos externos salvo que el usuario los haya pedido expresamente en el tema. No inventes citas ni atribuyas frases a personas reales.\n\nESTRUCTURA: 1) gancho breve y humano; 2) describe con precisión la experiencia emocional del tema; 3) habla al espectador y haz que se reconozca en la situación; 4) ofrece una nueva perspectiva; 5) mensaje compasivo y útil; 6) cierre corto, fuerte y esperanzador. Usa lenguaje sencillo, profundo y natural. Varía los comienzos y evita empezar siempre con “A veces...”. No repitas una idea con sinónimos. No uses encabezados, listas, emojis ni frases prefabricadas dentro del GUION. Si el tema es cansancio, distingue de forma natural entre cansancio físico, mental y emocional sin convertirlo en diagnóstico médico. La reflexión debe poder sostenerse por sí sola sin ninguna fuente externa. Si la investigación devuelve noticias o fuentes, NO las conviertas en historias dentro del GUION. La sección DATOS Y FUENTES puede indicar “No se utilizaron fuentes externas; reflexión creativa” para este modo. Termina con una frase que dé permiso para descansar, continuar, soltar o volver a intentarlo, según el tema.`:'';
+ const reflectionInstruction=isReflection?`\n\nMODO REFLEXIÓN V32 — prioridad máxima: esto es una reflexión motivacional para voz en off, NO un documental. ESCRIBE COMO UNA PERSONA REAL HABLANDO CON OTRA PERSONA, no como un poeta ni como un texto generado para impresionar. El objetivo es emocionar, acompañar y dejar una idea memorable. NO conviertas el texto en una investigación histórica. NO introduzcas escritores, atletas, celebridades, personajes, fechas, libros, novelas, citas textuales, estudios ni acontecimientos históricos solo para adornar la reflexión. NO uses nombres propios ni datos externos salvo que el usuario los haya pedido expresamente en el tema. No inventes citas ni atribuyas frases a personas reales.\n\nESTRUCTURA: 1) gancho breve y humano; 2) describe con precisión la experiencia emocional del tema; 3) habla al espectador y haz que se reconozca en la situación; 4) ofrece una nueva perspectiva; 5) mensaje compasivo y útil; 6) cierre corto, fuerte y esperanzador. Usa lenguaje sencillo, profundo y natural. Frases cortas o medias, fáciles de narrar en voz alta. Habla como una persona cercana, clara y sincera. Evita metáforas excesivas, lenguaje grandilocuente, abstracciones, palabras rebuscadas y frases que suenen literarias o artificiales. No escribas para demostrar profundidad: escribe para acompañar a alguien. Varía los comienzos y evita empezar siempre con “A veces...”. No repitas una idea con sinónimos. No uses encabezados, listas, emojis ni frases prefabricadas dentro del GUION. Si el tema es cansancio, distingue de forma natural entre cansancio físico, mental y emocional sin convertirlo en diagnóstico médico. La reflexión debe poder sostenerse por sí sola sin ninguna fuente externa. Si la investigación devuelve noticias o fuentes, NO las conviertas en historias dentro del GUION. La sección DATOS Y FUENTES puede indicar “No se utilizaron fuentes externas; reflexión creativa” para este modo. Termina con una frase que dé permiso para descansar, continuar, soltar o volver a intentarlo, según el tema. REVISIÓN OBLIGATORIA ANTES DE ENTREGAR: elimina palabras incompletas, errores como “Hi-la”, frases sin sentido, concordancias extrañas y repeticiones. Lee mentalmente el GUION en voz alta y corrige cualquier frase que una persona normalmente no diría.`:'';
  const prompt=`Investiga en la web el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". Busca fuentes confiables y actuales cuando corresponda. Distingue hechos documentados de hipótesis, leyendas o afirmaciones no verificadas.${reflectionInstruction}\n\nDevuelve SOLO este formato:\nTÍTULO: ...\nRESUMEN: ...\nHECHOS CLAVE:\n- ...\n- ...\n- ...\nGUION: [narración continua en español, natural, sin encabezados dentro del guion, sin repetir ideas, con un gancho inicial y cierre].\nDATOS Y FUENTES:\n- [Fuente 1] afirmación factual principal...\n- [Fuente 2] afirmación factual principal...\n- [Fuente 1, Fuente 3] si varias fuentes respaldan el mismo dato.\n\nEn DATOS Y FUENTES, respalda cada afirmación factual importante con los números de las fuentes recuperadas. Si algo es una hipótesis o no está confirmado, etiquétalo. No inventes fuentes ni URLs. Profundidad: ${depth}.`;
  setAIStatus('🌐 Buscando fuentes web + conectando con el backend seguro…');
  const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,model:$('aiModel').value.trim(),search:$('aiSearch').value,depth,topic,prompt})});
@@ -353,12 +353,29 @@ async function runAIResearch(topic){
  setAIStatus('✅ Motor utilizado: '+(data.providerLabel||data.provider||'IA')+(data.fallbacksTried?.length?' | Se activó fallback tras: '+data.fallbacksTried.join(', '):''));
  const m=textOut.match(/GUION:\s*([\s\S]*?)(?:\n(?:DATOS Y FUENTES|DATOS\s+Y\s+FUENTES)\s*:?)/i);
  AI_SCRIPT=(m?m[1]:textOut).trim();
+ if(isReflection){ AI_SCRIPT=cleanReflectionScript(AI_SCRIPT); }
  const fm=textOut.match(/(?:DATOS Y FUENTES|DATOS\s+Y\s+FUENTES)\s*:?\s*([\s\S]*)$/i);
  const sourceMap=fm?fm[1].trim():'';
  const box=$('scriptBox'); if(box){box.value=AI_SCRIPT;box.style.display='block';}
  const srcBox=$('aiSources'); if(srcBox){srcBox.style.display='block';srcBox.innerHTML='<b>FUENTES ENCONTRADAS</b>\n'+(sources.length?sources.map((x,i)=>`${i+1}. ${esc(x.title)}\n${esc(x.url)}`).join('\n\n'):'No se encontraron fuentes web automáticamente.')+(sourceMap?`\n\n<b>🧾 DATOS Y FUENTES USADOS EN EL GUIÓN</b>\n${esc(sourceMap)}`:'');}
  return {text:textOut,sources};
 }
+function cleanReflectionScript(text){
+ let s=String(text||'').replace(/\u00a0/g,' ').replace(/[ \t]+/g,' ').replace(/\n{3,}/g,'\n\n').trim();
+ // Remove accidental malformed fragments that commonly appear at the beginning of a generated reflection.
+ s=s.replace(/^hi[-\s]?la\s+/i,'');
+ s=s.replace(/\bhi[-\s]?la\b/gi,'');
+ // Remove decorative labels if the model ignored the format.
+ s=s.replace(/^(APERTURA|DESARROLLO|REFLEXIÓN|REFLEXION|APLICACIÓN|CIERRE)\s*:\s*/gmi,'');
+ // Collapse obvious immediate sentence repetition.
+ const lines=s.split(/(?<=[.!?])\s+/); const out=[];
+ for(const line of lines){ const norm=line.toLowerCase().replace(/[^a-záéíóúüñ0-9 ]/gi,'').replace(/\s+/g,' ').trim();
+   const prev=out.length?out[out.length-1].toLowerCase().replace(/[^a-záéíóúüñ0-9 ]/gi,'').replace(/\s+/g,' ').trim():'';
+   if(norm && norm!==prev) out.push(line.trim());
+ }
+ return out.join(' ').replace(/\s+([,.!?;:])/g,'$1').trim();
+}
+
 async function testAIResearch(){
  const topic=$('topic').value.trim(); if(!topic){alert('Escribe o genera primero un tema.');return}
  saveAISettings();
@@ -724,7 +741,7 @@ function promptDomain(topic){
  if(/automóvil|automovil|coches|coche|fabrica|fabricación|fabricacion|ingenier/.test(t)) return 'Industrial documentary reconstruction: realistic machinery, materials, factory architecture, safety equipment and manufacturing processes appropriate to the exact subject.';
  if(/naturaleza|animal|océano|oceano|mar|selva|tierra/.test(t)) return 'Natural-history documentary imagery: anatomically plausible animals, realistic habitats, weather, vegetation, water, geology and natural behavior.';
  if(/terror|horror|fantasma|demonio/.test(t)) return 'Cinematic horror imagery: believable environments, restrained visual tension, realistic anatomy and physical spaces, atmospheric suspense without gratuitous gore.';
- if(/reflexión|reflexion|motivación|motivacion|superación|superacion|vida/.test(t)) return 'Emotional cinematic storytelling: believable people, expressive but natural body language, meaningful environments and visual metaphors directly tied to the narration.';
+ if(/reflexión|reflexion|motivación|motivacion|superación|superacion|vida/.test(t)) return 'Natural emotional cinematic storytelling: believable people, ordinary meaningful environments, authentic body language and simple visuals directly tied to the narration; avoid exaggerated symbolic or surreal imagery.';
  return 'Subject-specific documentary cinematography: every visible element must directly represent the exact topic and the information narrated in this scene; avoid generic filler imagery.';
 }
 function flowPrompt(topic,style,fmt,bible,d,n){
