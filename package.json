@@ -1,8 +1,8 @@
 {
   "name":"ai-video-studio-flow",
-  "version":"29.0.0",
+  "version":"26.0.0",
   "private":true,
-  "description":"AI Video Studio FLOW V29 with deep multi-source research and AI fallback",
+  "description":"AI Video Studio FLOW V26 with automatic free/paid AI provider fallback",
   "main":"server.js",
   "scripts":{"start":"node server.js"},
   "engines":{"node":">=20"}

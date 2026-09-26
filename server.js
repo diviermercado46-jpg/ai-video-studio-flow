@@ -62,19 +62,6 @@ function xmlTag(block, tag){ const m=block.match(new RegExp(`<${tag}(?:\\s[^>]*)
 function normText(s){
   return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9ñáéíóúü\s-]/gi,' ').replace(/\s+/g,' ').trim();
 }
-function researchQueries(topic, depth='normal') {
-  const t=String(topic||'').trim();
-  const base=topicKeywords(t);
-  const qs=[`"${t}"`, t];
-  if(base.length){
-    qs.push(base.join(' '));
-    if(depth==='deep'){
-      qs.push(base.slice(0,Math.min(5,base.length)).join(' ')+' hechos');
-      qs.push(base.slice(0,Math.min(5,base.length)).join(' ')+' investigación');
-    }
-  }
-  return [...new Set(qs.filter(Boolean))].slice(0, depth==='deep'?5:3);
-}
 function topicKeywords(topic){
   const stop=new Set(['el','la','los','las','un','una','unos','unas','de','del','al','y','o','en','por','para','con','sin','que','como','es','son','misterio','misterios','caso','casos','historia','historias','secreto','secretos','sobre','una','uno']);
   return [...new Set(normText(topic).split(/\s+/).filter(w=>w.length>=4 && !stop.has(w)))];
@@ -96,12 +83,12 @@ function filterRelevantSources(sources, topic){
   const threshold=keywords.length<=2 ? 0.5 : 0.34;
   return scored.filter(s=>s.relevance>=threshold).sort((a,b)=>b.relevance-a.relevance).slice(0,10).map(({relevance,...s})=>s);
 }
-async function freeWebResearch(topic, depth='normal'){
+async function freeWebResearch(topic){
   const raw=[];
   const cleanTopic=String(topic||'').trim();
   const keywords=topicKeywords(cleanTopic);
   if(!cleanTopic || !keywords.length) return [];
-  const queries=researchQueries(cleanTopic, depth);
+  const queries=[`"${cleanTopic}"`, keywords.join(' ')].filter((x,i,a)=>x && a.indexOf(x)===i);
   for(const query of queries){
     const q=encodeURIComponent(query);
     try{
@@ -122,14 +109,6 @@ async function freeWebResearch(topic, depth='normal'){
   }catch(e){ console.warn('Wikipedia research:',e.message); }
   return filterRelevantSources(raw,cleanTopic);
 }
-function buildEvidenceMatrix(sources){
-  return sources.map((s,i)=>({id:i+1,title:s.title,url:s.url,extract:(s.snippet||'').slice(0,900)}));
-}
-function deepResearchPrompt(topic, prompt, sources){
-  const evidence=buildEvidenceMatrix(sources);
-  return `${prompt}\n\nDOSSIER DE EVIDENCIA (solo usa lo que aparece aquí para afirmar hechos externos):\n${JSON.stringify(evidence,null,2)}\n\nREGLAS: cita internamente los hechos como [Fuente 1], [Fuente 2], etc. No inventes una fuente. Si un dato no está respaldado por el dossier, trátalo como no confirmado o elimínalo. Separa claramente hechos, hipótesis y leyendas. Al final añade una sección FUENTES USADAS con cada fuente realmente utilizada.`;
-}
-
 function researchPack(sources){
   if(!sources.length) return 'No se encontraron fuentes externas automáticamente. Si no puedes verificar un dato, indícalo como no confirmado.';
   return sources.map((s,i)=>`FUENTE ${i+1}\nTítulo: ${s.title}\nURL: ${s.url}\nExtracto: ${s.snippet||'Sin extracto disponible'}\n`).join('\n');
@@ -210,7 +189,8 @@ async function main() {
         // V27: búsqueda web independiente y sin API key para que OpenRouter también reciba fuentes/URLs.
         let externalSources=[];
         try { externalSources=await freeWebResearch(String(body.topic||body.search||'')); } catch(e) { console.warn('Free web research:',e.message); }
-        const enrichedPrompt = externalSources.length ? (String(body.depth||'normal')==='deep' ? deepResearchPrompt(String(body.topic||body.search||''), prompt, externalSources) : `${prompt}\n\nINVESTIGACIÓN WEB PREVIA (fuentes recuperadas automáticamente):\n${researchPack(externalSources)}\n\nUsa estas fuentes como punto de partida. No inventes URLs ni afirmes que una fuente dice algo que no aparece en su extracto. Si hay contradicciones, señálalas.`) : prompt;
+        const sourceRules = `\n\nREGLAS V29 DE TRAZABILIDAD:\n- Usa únicamente la información que aparezca en los extractos de las fuentes proporcionadas o que puedas presentar claramente como contexto general no verificado.\n- No inventes hechos, fechas, cifras, testimonios ni URLs.\n- Cada afirmación factual importante debe quedar respaldada en la sección DATOS Y FUENTES mediante uno o más números de fuente, por ejemplo: [Fuente 1].\n- Distingue explícitamente HECHO DOCUMENTADO, HIPÓTESIS, TEORÍA o DATO NO CONFIRMADO cuando corresponda.\n- Si dos fuentes difieren, indícalo en DATOS Y FUENTES y no elijas una versión como cierta sin respaldo.\n- El GUION debe ser narración natural, sin etiquetas [Fuente X] dentro del texto.\n- Después del GUION incluye una sección DATOS Y FUENTES con una lista de las afirmaciones factuales principales y sus fuentes.\n- Formato obligatorio: TÍTULO, RESUMEN, HECHOS CLAVE, GUION, DATOS Y FUENTES.`;
+const enrichedPrompt = externalSources.length ? `${prompt}${sourceRules}\n\nINVESTIGACIÓN WEB PREVIA (fuentes recuperadas automáticamente):\n${researchPack(externalSources)}\n\nUsa estas fuentes como punto de partida. No inventes URLs ni afirmes que una fuente dice algo que no aparece en su extracto. Si hay contradicciones, señálalas.` : `${prompt}${sourceRules}`;
         for(const provider of order){
           try{
             let model=String(body.model||'').trim();

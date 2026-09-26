@@ -1,8 +1,9 @@
-AI Video Studio FLOW V29
+AI VIDEO STUDIO FLOW V30
 
-V29 añade investigación profunda: varias consultas por tema, contraste de fuentes, dossier de evidencia y guion con fuentes usadas.
+V30 añade un motor de reflexiones para categorías como Reflexión del día, Reflexiones, Motivación y Superación.
 
-Render: usa el mismo servicio ai-video-studio-flow-2. No necesitas crear otro servicio.
-Variables recomendadas: OPENROUTER_API_KEY y, opcionalmente, GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY.
+El motor pide a la IA una narración emocional y específica, con gancho, situación concreta, desarrollo, giro, mensaje y cierre. Evita listas genéricas y repeticiones. Para datos históricos o anécdotas exige respaldo en las fuentes recuperadas y no permite inventar nombres, fechas o citas.
 
-La búsqueda web gratuita usa Google News RSS y Wikipedia como recuperación previa; el motor IA recibe los extractos y debe distinguir hechos, hipótesis y datos no confirmados.
+Mantiene la investigación web, fuentes, guion, escenas, prompts, narración, lotes y continuidad visual de V29.
+
+Para usar el motor de IA en Render, configura la clave del proveedor en las variables de entorno del servidor. Nunca pongas una clave API en el navegador.

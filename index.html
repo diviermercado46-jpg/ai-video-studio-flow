@@ -28,7 +28,7 @@ textarea{min-height:100px;resize:vertical}.row{display:grid;grid-template-column
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="logo">🎬 AI VIDEO STUDIO — FLOW V27</div><div class="sub">Director de escenas · continuidad · acción · cámara · iluminación · prompts para Google Flow</div></div>
+<div class="top"><div class="logo">🎬 AI VIDEO STUDIO — FLOW V30</div><div class="sub">Director de escenas · continuidad · acción · cámara · iluminación · prompts para Google Flow</div></div>
 
 <div class="card">
 <label>TEMA</label>
@@ -118,7 +118,7 @@ textarea{min-height:100px;resize:vertical}.row{display:grid;grid-template-column
 </div>
 <label>INTERVALO</label><select id="int"><option value="3">1 escena cada 3 segundos</option><option value="4">1 escena cada 4 segundos</option><option value="5" selected>1 escena cada 5 segundos</option><option value="8">1 escena cada 8 segundos</option><option value="10">1 escena cada 10 segundos</option></select>
 <label>INTENSIDAD VISUAL</label><select id="detail"><option>Máximo detalle cinematográfico</option><option>Detalle alto</option></select>
-<button class="btn main" onclick="createProject()">🚀 CREAR PROYECTO — DIRECTOR V29</button>
+<button class="btn main" onclick="createProject()">🚀 CREAR PROYECTO — DIRECTOR V26</button>
 <div class="row">
 <button class="btn dark" onclick="nextTopic()">➡️ SIGUIENTE TEMA</button>
 <button class="btn dark" onclick="nextScript()">📝 CREAR GUIÓN</button>
@@ -132,17 +132,17 @@ textarea{min-height:100px;resize:vertical}.row{display:grid;grid-template-column
     <div><label>MODELO</label><input id="aiModel" value="openrouter/free" placeholder="Modelo API (AUTO puede dejarse vacío)"></div>
   </div>
   <label>CONEXIÓN SEGURA</label>
-  <div class="status">🔐 La V29 usa un backend seguro. Las claves se configuran en Render y nunca se guardan en este navegador.</div>
+  <div class="status">🔐 La V26 usa un backend seguro. Las claves se configuran en Render y nunca se guardan en este navegador.</div>
   <div class="row">
     <div><label>BÚSQUEDA</label><select id="aiSearch"><option value="required">Obligatoria</option><option value="auto">Automática</option></select></div>
     <div><label>PROFUNDIDAD</label><select id="aiDepth"><option value="normal">Normal</option><option value="deep">Profunda</option></select></div>
   </div>
   <button class="btn main" onclick="saveAISettings()">💾 GUARDAR CONFIGURACIÓN</button>
   <button class="btn dark" onclick="testAIResearch()">🔎 PROBAR INVESTIGACIÓN DEL TEMA</button>
-  <div id="aiStatus" class="status" style="display:block">Motor IA listo. Recomendado: AUTO + OPENROUTER_API_KEY. Si un motor se queda sin cuota, V29 intenta automáticamente otro motor configurado.</div>
+  <div id="aiStatus" class="status" style="display:block">Motor IA listo. Recomendado: AUTO + OPENROUTER_API_KEY. Si un motor se queda sin cuota, V26 intenta automáticamente otro motor configurado.</div>
   <div id="aiSources" class="narration-box" style="display:none"></div>
   <div class="warn">🔐 Seguridad: las claves de OpenRouter/Gemini/OpenAI/Claude quedan solo en el servidor mediante variables de entorno. Nunca se envían al navegador.
-<br>🆓 OpenRouter Free tiene límites de uso que pueden cambiar; revisa la cuota vigente de tu cuenta.</div>
+<br>🆓 OpenRouter Free no requiere tarjeta, pero tiene límites de uso; actualmente publica 50 solicitudes/día para su plan gratuito.</div>
 </div>
 
 <div class="history-card">
@@ -340,7 +340,9 @@ async function runAIResearch(topic){
  const provider=$('aiProvider').value;
  const category=selectedCategory(), duration=$('dur').value, style=$('style').value;
  const depth=$('aiDepth').value;
- const prompt=`Investiga en profundidad el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". Prioriza fuentes primarias, institucionales o medios reconocidos cuando estén disponibles. Contrasta varias fuentes y evita repetir la misma información. Distingue hechos documentados de hipótesis, leyendas o afirmaciones no verificadas.\n\nDevuelve SOLO este formato:\nTÍTULO: ...\nRESUMEN: ...\nHECHOS CLAVE:\n- ...\n- ...\n- ...\nGUION: [narración continua en español, natural, sin encabezados dentro del guion, sin repetir ideas, con un gancho inicial y cierre].\n\nLa narración debe estar basada en la investigación y no inventar datos. Profundidad: ${depth}. Si la profundidad es profunda, contrasta las fuentes y conserva solo afirmaciones respaldadas por el dossier. No inventes datos ni URLs.`;
+ const isReflection=/reflexión|reflexion|motivación|motivacion|superación|superacion|reflexiones|reflexiones del día|reflexion del dia/i.test(category);
+ const reflectionInstruction=isReflection?`\n\nMODO REFLEXIÓN V30 — prioridad máxima: crea una narración emocional, humana y profunda, no una lista de consejos ni un artículo genérico. El tema debe sentirse como una historia/reflexión pensada para voz en off. Estructura natural: 1) gancho breve y memorable; 2) situación cotidiana o experiencia concreta relacionada con el tema; 3) desarrollo emocional que explique lo que puede estar viviendo la persona; 4) giro o nueva perspectiva; 5) mensaje práctico y compasivo; 6) cierre corto que permanezca en la mente. Habla directamente al espectador cuando sea natural. Usa frases variadas, imágenes mentales y transiciones suaves. No repitas la misma idea con palabras diferentes. No uses encabezados, listas, emojis ni frases prefabricadas. Evita comenzar siempre con “A veces...”. Varía el ritmo y los arranques. Si el tema es “cansancio”, no conviertas el texto en una reflexión genérica: desarrolla específicamente el cansancio físico, mental o emocional según corresponda. Puedes incluir una historia, personaje o dato histórico solamente si la investigación recuperada lo respalda; nunca inventes nombres, fechas, citas o anécdotas. Termina con una frase de esperanza o permiso para avanzar/descansar, coherente con el tema.`:'';
+ const prompt=`Investiga en la web el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". Busca fuentes confiables y actuales cuando corresponda. Distingue hechos documentados de hipótesis, leyendas o afirmaciones no verificadas.${reflectionInstruction}\n\nDevuelve SOLO este formato:\nTÍTULO: ...\nRESUMEN: ...\nHECHOS CLAVE:\n- ...\n- ...\n- ...\nGUION: [narración continua en español, natural, sin encabezados dentro del guion, sin repetir ideas, con un gancho inicial y cierre].\nDATOS Y FUENTES:\n- [Fuente 1] afirmación factual principal...\n- [Fuente 2] afirmación factual principal...\n- [Fuente 1, Fuente 3] si varias fuentes respaldan el mismo dato.\n\nEn DATOS Y FUENTES, respalda cada afirmación factual importante con los números de las fuentes recuperadas. Si algo es una hipótesis o no está confirmado, etiquétalo. No inventes fuentes ni URLs. Profundidad: ${depth}.`;
  setAIStatus('🌐 Buscando fuentes web + conectando con el backend seguro…');
  const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,model:$('aiModel').value.trim(),search:$('aiSearch').value,depth,topic,prompt})});
  let data={}; try{data=await r.json()}catch(e){}
@@ -348,12 +350,13 @@ async function runAIResearch(topic){
  const textOut=data.text||'';
  const sources=data.sources||[];
  AI_RESEARCH=textOut; AI_SOURCES=sources;
- if(sources.length){ AI_RESEARCH += '\n\nFUENTES RECUPERADAS POR EL MOTOR:\n' + sources.map((x,i)=>`[Fuente ${i+1}] ${x.title} — ${x.url}`).join('\n'); }
  setAIStatus('✅ Motor utilizado: '+(data.providerLabel||data.provider||'IA')+(data.fallbacksTried?.length?' | Se activó fallback tras: '+data.fallbacksTried.join(', '):''));
- const m=textOut.match(/GUION:\s*([\s\S]*)$/i);
+ const m=textOut.match(/GUION:\s*([\s\S]*?)(?:\n(?:DATOS Y FUENTES|DATOS\s+Y\s+FUENTES)\s*:?)/i);
  AI_SCRIPT=(m?m[1]:textOut).trim();
+ const fm=textOut.match(/(?:DATOS Y FUENTES|DATOS\s+Y\s+FUENTES)\s*:?\s*([\s\S]*)$/i);
+ const sourceMap=fm?fm[1].trim():'';
  const box=$('scriptBox'); if(box){box.value=AI_SCRIPT;box.style.display='block';}
- const srcBox=$('aiSources'); if(srcBox){srcBox.style.display='block';srcBox.innerHTML='<b>FUENTES ENCONTRADAS</b>\n'+(sources.length?sources.map((x,i)=>`${i+1}. ${esc(x.title)}\n${esc(x.url)}`).join('\n\n'):'No se encontraron fuentes web automáticamente.');}
+ const srcBox=$('aiSources'); if(srcBox){srcBox.style.display='block';srcBox.innerHTML='<b>FUENTES ENCONTRADAS</b>\n'+(sources.length?sources.map((x,i)=>`${i+1}. ${esc(x.title)}\n${esc(x.url)}`).join('\n\n'):'No se encontraron fuentes web automáticamente.')+(sourceMap?`\n\n<b>🧾 DATOS Y FUENTES USADOS EN EL GUIÓN</b>\n${esc(sourceMap)}`:'');}
  return {text:textOut,sources};
 }
 async function testAIResearch(){
