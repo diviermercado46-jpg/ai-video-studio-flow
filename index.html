@@ -347,6 +347,7 @@ async function runAIResearch(topic){
  ? `Crea una reflexión original en español sobre el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". NO hagas investigación web y NO uses fuentes externas. No conviertas el tema en una explicación de diccionario ni en una investigación periodística. El objetivo es acompañar emocionalmente al espectador con palabras sencillas, naturales y sinceras.${reflectionInstruction}\n\nDevuelve SOLO este formato:`
  : `Investiga en la web el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". Busca fuentes confiables y actuales cuando corresponda. Distingue hechos documentados de hipótesis, leyendas o afirmaciones no verificadas.${reflectionInstruction}\n\nDevuelve SOLO este formato:`\nTÍTULO: ...\nRESUMEN: ...\nHECHOS CLAVE:\n- ...\n- ...\n- ...\nGUION: [narración continua en español, natural, sin encabezados dentro del guion, sin repetir ideas, con un gancho inicial y cierre].\nDATOS Y FUENTES:\n- [Fuente 1] afirmación factual principal...\n- [Fuente 2] afirmación factual principal...\n- [Fuente 1, Fuente 3] si varias fuentes respaldan el mismo dato.\n\nEn DATOS Y FUENTES, respalda cada afirmación factual importante con los números de las fuentes recuperadas. Si algo es una hipótesis o no está confirmado, etiquétalo. No inventes fuentes ni URLs. Profundidad: ${depth}.`;
  setAIStatus(isReflection ? '✍️ Creando reflexión original sin investigación externa…' : '🌐 Buscando fuentes web + conectando con el backend seguro…');
+ setAIStatus(provider==='auto'?'⏳ AUTO: probando OpenRouter y usando fallback si es necesario…':`⏳ Probando ${providerName(provider)}…`);
  const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,model:$('aiModel').value.trim(),search:$('aiSearch').value,depth,topic,prompt})});
  let data={}; try{data=await r.json()}catch(e){}
  if(!r.ok) throw new Error(data?.error||'El backend no pudo completar la investigación.');
@@ -395,9 +396,24 @@ function renderProviderResult(data){
   $('aiStatus').innerHTML=used+fb;
 }
 async function testAIResearch(){
- const topic=$('topic').value.trim(); if(!topic){alert('Escribe o genera primero un tema.');return}
+ const topic=$('topic').value.trim();
+ if(!topic){alert('Escribe o genera primero un tema.');return}
  saveAISettings();
- try{await runAIResearch(topic);setAIStatus('✅ Prueba completada. La investigación y el guion ya están cargados.');}catch(e){setAIStatus('❌ '+e.message);alert(e.message)}
+ const btn=[...document.querySelectorAll('button')].find(b=>b.textContent.includes('PROBAR INVESTIGACIÓN DEL TEMA'));
+ if(btn){btn.disabled=true;btn.dataset.oldText=btn.textContent;btn.textContent='⏳ PROBANDO MOTOR IA…';}
+ setAIStatus('⏳ Iniciando prueba…');
+ try{
+   const isReflection=/reflexión|reflexion|motivación|motivacion|superación|superacion|reflexiones/i.test(selectedCategory());
+   setAIStatus(isReflection?'✍️ Creando reflexión original…':'🌐 Buscando fuentes y creando guion…');
+   await runAIResearch(topic);
+   setAIStatus('✅ Prueba completada. El guion ya está cargado.');
+ }catch(e){
+   const msg=e?.message||'No se pudo completar la prueba.';
+   setAIStatus('❌ '+msg);
+   alert('AI Studio no pudo completar la prueba.\n\n'+msg+'\n\nRevisa el estado de los motores y las variables de entorno en Render.');
+ }finally{
+   if(btn){btn.disabled=false;btn.textContent=btn.dataset.oldText||'🔎 PROBAR INVESTIGACIÓN DEL TEMA';}
+ }
 }
 
 function fitNarrationToWords(text, maxWords, topic, n){

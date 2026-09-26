@@ -119,10 +119,17 @@ function keyFor(provider){
   return process.env[map[provider]] || '';
 }
 function providerLabel(p){ return ({openrouter:'OpenRouter gratis',gemini:'Google Gemini',openai:'OpenAI / ChatGPT',claude:'Anthropic / Claude'})[p] || p; }
+async function fetchWithTimeout(url, options={}, ms=35000){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),ms);
+  try { return await fetch(url,{...options,signal:controller.signal}); }
+  catch(e){ if(e?.name==='AbortError') throw new Error(`Tiempo de espera agotado después de ${Math.round(ms/1000)} segundos.`); throw e; }
+  finally { clearTimeout(timer); }
+}
 async function callOpenRouter(model, prompt){
   const key=process.env.OPENROUTER_API_KEY;
   if(!key) throw new Error('Falta OPENROUTER_API_KEY.');
-  const r=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+  const r=await fetchWithTimeout('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json','HTTP-Referer':'https://ai-video-studio-flow-2.onrender.com','X-Title':'AI Video Studio FLOW'},
     body:JSON.stringify({model:model||'openrouter/free',messages:[{role:'user',content:prompt}],temperature:0.7,max_tokens:6000})
   });
@@ -137,7 +144,7 @@ async function callGemini(model,prompt){
   if(!key) throw new Error('Falta GEMINI_API_KEY.');
   const mdl=model||'gemini-3.8-flash';
   const url=`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(mdl)}:generateContent?key=${encodeURIComponent(key)}`;
-  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],tools:[{google_search:{}}],generationConfig:{temperature:0.7,maxOutputTokens:6000}})});
+  const r=await fetchWithTimeout(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],tools:[{google_search:{}}],generationConfig:{temperature:0.7,maxOutputTokens:6000}})});
   const data=await r.json();
   if(!r.ok) throw new Error(data?.error?.message||`Gemini HTTP ${r.status}`);
   const text=(data?.candidates?.[0]?.content?.parts||[]).filter(x=>typeof x.text==='string').map(x=>x.text).join('\n').trim();
@@ -150,14 +157,14 @@ async function callGemini(model,prompt){
 async function callOpenAI(model,prompt) {
   const key=process.env.OPENAI_API_KEY;
   if (!key) throw new Error('Falta OPENAI_API_KEY.');
-  const r = await fetch('https://api.openai.com/v1/responses', {method:'POST',headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model:model||'gpt-5.6-luna',tools:[{type:'web_search'}],input:prompt})});
+  const r = await fetchWithTimeout('https://api.openai.com/v1/responses', {method:'POST',headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify({model:model||'gpt-5.6-luna',tools:[{type:'web_search'}],input:prompt})});
   const data=await r.json(); if(!r.ok) throw new Error(data?.error?.message||`OpenAI HTTP ${r.status}`);
   return {text:openaiText(data),sources:openaiSources(data),raw:data};
 }
 async function callClaude(model,prompt) {
   const key=process.env.ANTHROPIC_API_KEY;
   if (!key) throw new Error('Falta ANTHROPIC_API_KEY.');
-  const r = await fetch('https://api.anthropic.com/v1/messages', {method:'POST',headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json'},body:JSON.stringify({model:model||'claude-sonnet-4-6',max_tokens:6000,tools:[{type:'web_search_20250305',name:'web_search',max_uses:5}],messages:[{role:'user',content:prompt}]})});
+  const r = await fetchWithTimeout('https://api.anthropic.com/v1/messages', {method:'POST',headers:{'x-api-key':key,'anthropic-version':'2023-06-01','content-type':'application/json'},body:JSON.stringify({model:model||'claude-sonnet-4-6',max_tokens:6000,tools:[{type:'web_search_20250305',name:'web_search',max_uses:5}],messages:[{role:'user',content:prompt}]})});
   const data=await r.json(); if(!r.ok) throw new Error(data?.error?.message||`Claude HTTP ${r.status}`);
   return {text:claudeText(data),sources:claudeSources(data),raw:data};
 }
