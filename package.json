@@ -1,9 +1,9 @@
 {
-  "name": "ai-video-studio-flow",
-  "version": "24.1.0",
-  "private": true,
-  "description": "AI Video Studio FLOW - backend seguro para investigación web con OpenAI o Claude",
-  "main": "server.js",
-  "scripts": {"start": "node server.js"},
-  "engines": {"node": ">=20"}
+  "name":"ai-video-studio-flow",
+  "version":"26.0.0",
+  "private":true,
+  "description":"AI Video Studio FLOW V26 with automatic free/paid AI provider fallback",
+  "main":"server.js",
+  "scripts":{"start":"node server.js"},
+  "engines":{"node":">=20"}
 }

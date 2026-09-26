@@ -1,18 +1,22 @@
-AI VIDEO STUDIO FLOW — V25 GEMINI
+AI VIDEO STUDIO FLOW V26
 
-Backend Node.js para Render.
+Qué cambia:
+- AUTO selecciona el primer motor disponible.
+- OpenRouter Free es el motor recomendado para empezar sin pagar: usa modelos gratuitos.
+- Si un proveedor falla por cuota/error, AUTO intenta el siguiente proveedor configurado.
+- Gemini mantiene búsqueda web mediante Google Search grounding cuando está disponible.
+- Las API keys solo viven en Render Environment Variables; nunca en el navegador.
 
-CONFIGURACIÓN EN RENDER
-1. Service: ai-video-studio-flow-2
-2. Environment → Environment Variables
-3. Crear:
-   GEMINI_API_KEY = tu clave de Google AI Studio
-4. Guardar con Save, rebuild, and deploy.
+Render:
+Build Command: npm install
+Start Command: npm start
+Environment recomendado:
+OPENROUTER_API_KEY=tu_clave
+GEMINI_API_KEY=tu_clave (opcional)
+OPENAI_API_KEY=tu_clave (opcional)
+ANTHROPIC_API_KEY=tu_clave (opcional)
 
-MODELO PREDETERMINADO
-- gemini-3.5-flash-lite
+Importante:
+El nivel gratuito no es ilimitado. OpenRouter publica actualmente 50 solicitudes/día en su plan Free. Si una cuota se agota, AUTO intenta otro proveedor configurado.
 
-La aplicación usa Gemini desde el servidor y puede activar Google Search para investigar el tema. La clave nunca se envía al navegador.
-
-IMPORTANTE
-No pegues API keys en GitHub, README, capturas ni chats.
+No se simulan clics dentro de Google Flow. La aplicación prepara prompts y abre Flow para que el usuario continúe allí.
