@@ -1,6 +1,6 @@
-AI VIDEO STUDIO FLOW V27
+AI VIDEO STUDIO FLOW V28
 
-V27 añade investigación web independiente sin API de búsqueda adicional:
+V28 añade investigación web independiente sin API de búsqueda adicional:
 - Google News RSS para artículos actuales.
 - Wikipedia API para contexto y antecedentes.
 - Las URLs recuperadas se muestran en FUENTES ENCONTRADAS.
@@ -18,3 +18,5 @@ ANTHROPIC_API_KEY
 No pongas claves dentro de index.html. Configúralas en Render > Environment.
 Start command: node server.js
 Node: >=20
+
+V28: filtra las fuentes web por relevancia respecto al tema exacto y descarta resultados de otros temas; realiza búsquedas con la frase completa y con palabras clave.

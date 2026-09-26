@@ -53,32 +53,61 @@ function claudeSources(data) {
 }
 function uniqueSources(out){ return [...new Map((out||[]).filter(x=>x&&x.url).map(x=>[x.url,x])).values()]; }
 async function fetchText(url, options={}) {
-  const r=await fetch(url,{...options,headers:{'User-Agent':'AI-Video-Studio-FLOW/27 (research)','Accept':'text/xml,application/xml,text/html,application/json;q=0.9,*/*;q=0.8',...(options.headers||{})}});
+  const r=await fetch(url,{...options,headers:{'User-Agent':'AI-Video-Studio-FLOW/28 (research)','Accept':'text/xml,application/xml,text/html,application/json;q=0.9,*/*;q=0.8',...(options.headers||{})}});
   if(!r.ok) throw new Error(`HTTP ${r.status} al consultar ${url}`);
   return await r.text();
 }
 function stripXml(s){ return String(s||'').replace(/<[^>]*>/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/\s+/g,' ').trim(); }
 function xmlTag(block, tag){ const m=block.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`,'i')); return m?stripXml(m[1]):''; }
+function normText(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9ñáéíóúü\s-]/gi,' ').replace(/\s+/g,' ').trim();
+}
+function topicKeywords(topic){
+  const stop=new Set(['el','la','los','las','un','una','unos','unas','de','del','al','y','o','en','por','para','con','sin','que','como','es','son','misterio','misterios','caso','casos','historia','historias','secreto','secretos','sobre','una','uno']);
+  return [...new Set(normText(topic).split(/\s+/).filter(w=>w.length>=4 && !stop.has(w)))];
+}
+function sourceRelevance(source, keywords){
+  const hay=normText(`${source.title||''} ${source.snippet||''}`);
+  if(!hay || !keywords.length) return 0;
+  let hits=0;
+  for(const k of keywords){
+    if(hay.includes(k)) hits++;
+  }
+  return hits / keywords.length;
+}
+function filterRelevantSources(sources, topic){
+  const keywords=topicKeywords(topic);
+  if(!keywords.length) return [];
+  const scored=uniqueSources(sources).map(s=>({...s,relevance:sourceRelevance(s,keywords)}));
+  // Require meaningful overlap with the actual topic. For a one-keyword topic, require that keyword.
+  const threshold=keywords.length<=2 ? 0.5 : 0.34;
+  return scored.filter(s=>s.relevance>=threshold).sort((a,b)=>b.relevance-a.relevance).slice(0,10).map(({relevance,...s})=>s);
+}
 async function freeWebResearch(topic){
-  const sources=[];
-  const q=encodeURIComponent(String(topic).trim());
-  // Google News RSS: no API key required; returns current articles and their URLs.
+  const raw=[];
+  const cleanTopic=String(topic||'').trim();
+  const keywords=topicKeywords(cleanTopic);
+  if(!cleanTopic || !keywords.length) return [];
+  const queries=[`"${cleanTopic}"`, keywords.join(' ')].filter((x,i,a)=>x && a.indexOf(x)===i);
+  for(const query of queries){
+    const q=encodeURIComponent(query);
+    try{
+      const xml=await fetchText(`https://news.google.com/rss/search?q=${q}&hl=es-419&gl=EC&ceid=EC:es-419`);
+      const items=[...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0,10).map(m=>m[1]);
+      for(const b of items){
+        const title=xmlTag(b,'title'); const link=xmlTag(b,'link'); const desc=xmlTag(b,'description'); const pub=xmlTag(b,'pubDate');
+        if(link) raw.push({title:title||link,url:link,snippet:desc,published:pub});
+      }
+    }catch(e){ console.warn('Google News research:',e.message); }
+  }
   try{
-    const xml=await fetchText(`https://news.google.com/rss/search?q=${q}&hl=es-419&gl=EC&ceid=EC:es-419`);
-    const items=[...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0,8).map(m=>m[1]);
-    for(const b of items){
-      const title=xmlTag(b,'title'); const link=xmlTag(b,'link'); const desc=xmlTag(b,'description'); const pub=xmlTag(b,'pubDate');
-      if(link) sources.push({title:title||link,url:link,snippet:desc,published:pub});
-    }
-  }catch(e){ console.warn('Google News research:',e.message); }
-  // Wikipedia API: useful for historical/background context without an API key.
-  try{
-    const data=JSON.parse(await fetchText(`https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&gsrlimit=3&prop=extracts&exintro=1&explaintext=1&format=json&origin=*`));
+    const q=encodeURIComponent(cleanTopic);
+    const data=JSON.parse(await fetchText(`https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&gsrlimit=5&prop=extracts|info&inprop=url&exintro=1&explaintext=1&format=json&origin=*`));
     for(const page of Object.values(data?.query?.pages||{})){
-      if(page?.fullurl || page?.title) sources.push({title:`Wikipedia: ${page.title}`,url:page.fullurl||`https://es.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g,'_'))}`,snippet:String(page.extract||'').slice(0,900)});
+      if(page?.fullurl || page?.title) raw.push({title:`Wikipedia: ${page.title}`,url:page.fullurl||`https://es.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g,'_'))}`,snippet:String(page.extract||'').slice(0,1200)});
     }
   }catch(e){ console.warn('Wikipedia research:',e.message); }
-  return uniqueSources(sources).slice(0,10);
+  return filterRelevantSources(raw,cleanTopic);
 }
 function researchPack(sources){
   if(!sources.length) return 'No se encontraron fuentes externas automáticamente. Si no puedes verificar un dato, indícalo como no confirmado.';
@@ -147,7 +176,7 @@ function providerOrder(requested){
 async function main() {
   const server=http.createServer(async (req,res)=>{
     if(req.method==='OPTIONS') { res.writeHead(204,{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'GET,POST,OPTIONS'}); return res.end(); }
-    if(req.method==='GET' && req.url==='/health') return json(res,200,{ok:true,service:'AI Video Studio FLOW',version:'27.0',providers:{openrouter:!!keyFor('openrouter'),gemini:!!keyFor('gemini'),openai:!!keyFor('openai'),claude:!!keyFor('claude')}});
+    if(req.method==='GET' && req.url==='/health') return json(res,200,{ok:true,service:'AI Video Studio FLOW',version:'28.0',providers:{openrouter:!!keyFor('openrouter'),gemini:!!keyFor('gemini'),openai:!!keyFor('openai'),claude:!!keyFor('claude')}});
     if(req.method==='POST' && req.url==='/api/research') {
       try {
         const body=await readBody(req);
@@ -169,7 +198,7 @@ async function main() {
             if(provider==='openai' && !model) model='gpt-5.6-luna';
             if(provider==='claude' && !model) model='claude-sonnet-4-6';
             const result=await callProvider(provider,model,enrichedPrompt);
-            return json(res,200,{ok:true,version:'27.0',provider,providerLabel:providerLabel(provider),model,text:result.text,sources:uniqueSources([...(externalSources||[]),...(result.sources||[])]),fallbacksTried:errors.map(x=>x.provider),webSearch:{ok:externalSources.length>0,count:externalSources.length}});
+            return json(res,200,{ok:true,version:'28.0',provider,providerLabel:providerLabel(provider),model,text:result.text,sources:uniqueSources([...(externalSources||[]),...(result.sources||[])]),fallbacksTried:errors.map(x=>x.provider),webSearch:{ok:externalSources.length>0,count:externalSources.length}});
           }catch(e){
             errors.push({provider,message:e.message||'Error'});
             console.error(`${provider}:`,e.message);
@@ -185,6 +214,6 @@ async function main() {
     }
     return json(res,404,{error:'Ruta no encontrada'});
   });
-  server.listen(PORT,'0.0.0.0',()=>console.log(`AI Video Studio FLOW V27 escuchando en ${PORT}`));
+  server.listen(PORT,'0.0.0.0',()=>console.log(`AI Video Studio FLOW V28 escuchando en ${PORT}`));
 }
 main();
