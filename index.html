@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>AI Video Studio — FLOW V24</title>
+<title>AI Video Studio — FLOW V27</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#08080a;color:#f5f5f5;font-family:system-ui,-apple-system,Segoe UI,sans-serif}
 .wrap{max-width:800px;margin:auto;padding:12px}.top{position:sticky;top:0;z-index:9;background:#08080af2;backdrop-filter:blur(12px);padding:9px 2px 12px}.logo{font-size:20px;font-weight:900}.sub{font-size:12px;color:#a1a1aa;margin-top:3px}
@@ -28,7 +28,7 @@ textarea{min-height:100px;resize:vertical}.row{display:grid;grid-template-column
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="logo">🎬 AI VIDEO STUDIO — FLOW V23</div><div class="sub">Director de escenas · continuidad · acción · cámara · iluminación · prompts para Google Flow</div></div>
+<div class="top"><div class="logo">🎬 AI VIDEO STUDIO — FLOW V27</div><div class="sub">Director de escenas · continuidad · acción · cámara · iluminación · prompts para Google Flow</div></div>
 
 <div class="card">
 <label>TEMA</label>
@@ -341,8 +341,8 @@ async function runAIResearch(topic){
  const category=selectedCategory(), duration=$('dur').value, style=$('style').value;
  const depth=$('aiDepth').value;
  const prompt=`Investiga en la web el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". Busca fuentes confiables y actuales cuando corresponda. Distingue hechos documentados de hipótesis, leyendas o afirmaciones no verificadas.\n\nDevuelve SOLO este formato:\nTÍTULO: ...\nRESUMEN: ...\nHECHOS CLAVE:\n- ...\n- ...\n- ...\nGUION: [narración continua en español, natural, sin encabezados dentro del guion, sin repetir ideas, con un gancho inicial y cierre].\n\nLa narración debe estar basada en la investigación y no inventar datos. Profundidad: ${depth}.`;
- setAIStatus('🔐 Conectando con el backend seguro…');
- const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,model:$('aiModel').value.trim(),search:$('aiSearch').value,depth,prompt})});
+ setAIStatus('🌐 Buscando fuentes web + conectando con el backend seguro…');
+ const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,model:$('aiModel').value.trim(),search:$('aiSearch').value,depth,topic,prompt})});
  let data={}; try{data=await r.json()}catch(e){}
  if(!r.ok) throw new Error(data?.error||'El backend no pudo completar la investigación.');
  const textOut=data.text||'';
@@ -352,7 +352,7 @@ async function runAIResearch(topic){
  const m=textOut.match(/GUION:\s*([\s\S]*)$/i);
  AI_SCRIPT=(m?m[1]:textOut).trim();
  const box=$('scriptBox'); if(box){box.value=AI_SCRIPT;box.style.display='block';}
- const srcBox=$('aiSources'); if(srcBox){srcBox.style.display='block';srcBox.innerHTML='<b>FUENTES ENCONTRADAS</b>\n'+(sources.length?sources.map((x,i)=>`${i+1}. ${esc(x.title)}\n${esc(x.url)}`).join('\n\n'):'El proveedor no devolvió una lista de URLs en la respuesta.');}
+ const srcBox=$('aiSources'); if(srcBox){srcBox.style.display='block';srcBox.innerHTML='<b>FUENTES ENCONTRADAS</b>\n'+(sources.length?sources.map((x,i)=>`${i+1}. ${esc(x.title)}\n${esc(x.url)}`).join('\n\n'):'No se encontraron fuentes web automáticamente.');}
  return {text:textOut,sources};
 }
 async function testAIResearch(){

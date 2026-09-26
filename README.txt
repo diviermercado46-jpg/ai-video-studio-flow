@@ -1,22 +1,20 @@
-AI VIDEO STUDIO FLOW V26
+AI VIDEO STUDIO FLOW V27
 
-Qué cambia:
-- AUTO selecciona el primer motor disponible.
-- OpenRouter Free es el motor recomendado para empezar sin pagar: usa modelos gratuitos.
-- Si un proveedor falla por cuota/error, AUTO intenta el siguiente proveedor configurado.
-- Gemini mantiene búsqueda web mediante Google Search grounding cuando está disponible.
-- Las API keys solo viven en Render Environment Variables; nunca en el navegador.
+V27 añade investigación web independiente sin API de búsqueda adicional:
+- Google News RSS para artículos actuales.
+- Wikipedia API para contexto y antecedentes.
+- Las URLs recuperadas se muestran en FUENTES ENCONTRADAS.
+- Las fuentes se pasan al motor IA antes de generar el guion.
+- OpenRouter sigue siendo el motor gratuito principal/fallback.
+- Gemini, OpenAI y Claude siguen siendo opcionales.
 
-Render:
-Build Command: npm install
-Start Command: npm start
-Environment recomendado:
-OPENROUTER_API_KEY=tu_clave
-GEMINI_API_KEY=tu_clave (opcional)
-OPENAI_API_KEY=tu_clave (opcional)
-ANTHROPIC_API_KEY=tu_clave (opcional)
+RENDER
+Variables opcionales:
+OPENROUTER_API_KEY
+GEMINI_API_KEY
+OPENAI_API_KEY
+ANTHROPIC_API_KEY
 
-Importante:
-El nivel gratuito no es ilimitado. OpenRouter publica actualmente 50 solicitudes/día en su plan Free. Si una cuota se agota, AUTO intenta otro proveedor configurado.
-
-No se simulan clics dentro de Google Flow. La aplicación prepara prompts y abre Flow para que el usuario continúe allí.
+No pongas claves dentro de index.html. Configúralas en Render > Environment.
+Start command: node server.js
+Node: >=20

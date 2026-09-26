@@ -52,6 +52,39 @@ function claudeSources(data) {
   return [...new Map(out.map(x=>[x.url,x])).values()];
 }
 function uniqueSources(out){ return [...new Map((out||[]).filter(x=>x&&x.url).map(x=>[x.url,x])).values()]; }
+async function fetchText(url, options={}) {
+  const r=await fetch(url,{...options,headers:{'User-Agent':'AI-Video-Studio-FLOW/27 (research)','Accept':'text/xml,application/xml,text/html,application/json;q=0.9,*/*;q=0.8',...(options.headers||{})}});
+  if(!r.ok) throw new Error(`HTTP ${r.status} al consultar ${url}`);
+  return await r.text();
+}
+function stripXml(s){ return String(s||'').replace(/<[^>]*>/g,' ').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&#39;/g,"'").replace(/&quot;/g,'"').replace(/\s+/g,' ').trim(); }
+function xmlTag(block, tag){ const m=block.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`,'i')); return m?stripXml(m[1]):''; }
+async function freeWebResearch(topic){
+  const sources=[];
+  const q=encodeURIComponent(String(topic).trim());
+  // Google News RSS: no API key required; returns current articles and their URLs.
+  try{
+    const xml=await fetchText(`https://news.google.com/rss/search?q=${q}&hl=es-419&gl=EC&ceid=EC:es-419`);
+    const items=[...xml.matchAll(/<item>([\s\S]*?)<\/item>/gi)].slice(0,8).map(m=>m[1]);
+    for(const b of items){
+      const title=xmlTag(b,'title'); const link=xmlTag(b,'link'); const desc=xmlTag(b,'description'); const pub=xmlTag(b,'pubDate');
+      if(link) sources.push({title:title||link,url:link,snippet:desc,published:pub});
+    }
+  }catch(e){ console.warn('Google News research:',e.message); }
+  // Wikipedia API: useful for historical/background context without an API key.
+  try{
+    const data=JSON.parse(await fetchText(`https://es.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${q}&gsrlimit=3&prop=extracts&exintro=1&explaintext=1&format=json&origin=*`));
+    for(const page of Object.values(data?.query?.pages||{})){
+      if(page?.fullurl || page?.title) sources.push({title:`Wikipedia: ${page.title}`,url:page.fullurl||`https://es.wikipedia.org/wiki/${encodeURIComponent(page.title.replace(/ /g,'_'))}`,snippet:String(page.extract||'').slice(0,900)});
+    }
+  }catch(e){ console.warn('Wikipedia research:',e.message); }
+  return uniqueSources(sources).slice(0,10);
+}
+function researchPack(sources){
+  if(!sources.length) return 'No se encontraron fuentes externas automáticamente. Si no puedes verificar un dato, indícalo como no confirmado.';
+  return sources.map((s,i)=>`FUENTE ${i+1}\nTítulo: ${s.title}\nURL: ${s.url}\nExtracto: ${s.snippet||'Sin extracto disponible'}\n`).join('\n');
+}
+
 function keyFor(provider){
   const map={openrouter:'OPENROUTER_API_KEY',gemini:'GEMINI_API_KEY',openai:'OPENAI_API_KEY',claude:'ANTHROPIC_API_KEY'};
   return process.env[map[provider]] || '';
@@ -114,7 +147,7 @@ function providerOrder(requested){
 async function main() {
   const server=http.createServer(async (req,res)=>{
     if(req.method==='OPTIONS') { res.writeHead(204,{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'GET,POST,OPTIONS'}); return res.end(); }
-    if(req.method==='GET' && req.url==='/health') return json(res,200,{ok:true,service:'AI Video Studio FLOW',version:'26.0',providers:{openrouter:!!keyFor('openrouter'),gemini:!!keyFor('gemini'),openai:!!keyFor('openai'),claude:!!keyFor('claude')}});
+    if(req.method==='GET' && req.url==='/health') return json(res,200,{ok:true,service:'AI Video Studio FLOW',version:'27.0',providers:{openrouter:!!keyFor('openrouter'),gemini:!!keyFor('gemini'),openai:!!keyFor('openai'),claude:!!keyFor('claude')}});
     if(req.method==='POST' && req.url==='/api/research') {
       try {
         const body=await readBody(req);
@@ -124,6 +157,10 @@ async function main() {
         const order=providerOrder(requested);
         if(!order.length) return json(res,500,{error:'No hay ningún motor configurado. Añade OPENROUTER_API_KEY (recomendado gratis) o GEMINI_API_KEY en Render → Environment.'});
         const errors=[];
+        // V27: búsqueda web independiente y sin API key para que OpenRouter también reciba fuentes/URLs.
+        let externalSources=[];
+        try { externalSources=await freeWebResearch(String(body.topic||body.search||'')); } catch(e) { console.warn('Free web research:',e.message); }
+        const enrichedPrompt = externalSources.length ? `${prompt}\n\nINVESTIGACIÓN WEB PREVIA (fuentes recuperadas automáticamente):\n${researchPack(externalSources)}\n\nUsa estas fuentes como punto de partida. No inventes URLs ni afirmes que una fuente dice algo que no aparece en su extracto. Si hay contradicciones, señálalas.` : prompt;
         for(const provider of order){
           try{
             let model=String(body.model||'').trim();
@@ -131,8 +168,8 @@ async function main() {
             if(provider==='gemini' && (requested==='auto' || !model || model==='openrouter/free' || model.startsWith('gpt-') || model.includes('claude'))) model='gemini-3.8-flash';
             if(provider==='openai' && !model) model='gpt-5.6-luna';
             if(provider==='claude' && !model) model='claude-sonnet-4-6';
-            const result=await callProvider(provider,model,prompt);
-            return json(res,200,{ok:true,provider,providerLabel:providerLabel(provider),model,text:result.text,sources:result.sources||[],fallbacksTried:errors.map(x=>x.provider)});
+            const result=await callProvider(provider,model,enrichedPrompt);
+            return json(res,200,{ok:true,version:'27.0',provider,providerLabel:providerLabel(provider),model,text:result.text,sources:uniqueSources([...(externalSources||[]),...(result.sources||[])]),fallbacksTried:errors.map(x=>x.provider),webSearch:{ok:externalSources.length>0,count:externalSources.length}});
           }catch(e){
             errors.push({provider,message:e.message||'Error'});
             console.error(`${provider}:`,e.message);
@@ -148,6 +185,6 @@ async function main() {
     }
     return json(res,404,{error:'Ruta no encontrada'});
   });
-  server.listen(PORT,'0.0.0.0',()=>console.log(`AI Video Studio FLOW 24.1 escuchando en ${PORT}`));
+  server.listen(PORT,'0.0.0.0',()=>console.log(`AI Video Studio FLOW V27 escuchando en ${PORT}`));
 }
 main();
