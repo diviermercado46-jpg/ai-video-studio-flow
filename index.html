@@ -125,23 +125,22 @@ textarea{min-height:100px;resize:vertical}.row{display:grid;grid-template-column
 </div>
 <div class="warn">Al elegir una categoría, el TEMA se genera automáticamente. Los temas usados se guardan por categoría para evitar repeticiones. Cuando se agota la lista preparada, el sistema genera nuevas combinaciones automáticamente.</div>
 <div class="batch-card" id="aiEnginePanel">
-  <div style="font-size:18px;font-weight:900">🧠 MOTOR IA + 🔎 BÚSQUEDA WEB</div>
-  <div class="summary">Investiga el tema con fuentes actuales y usa esa información para construir una narración específica. Puedes elegir OpenAI o Claude.</div>
+  <div style="font-size:18px;font-weight:900">🧠 GEMINI + 🔎 BÚSQUEDA WEB</div>
+  <div class="summary">El proyecto usa Gemini para investigar el tema, consultar la web cuando corresponde y construir una narración específica para tu video.</div>
   <div class="row">
-    <div><label>MOTOR</label><select id="aiProvider" onchange="updateAIProvider()"><option value="openai">OpenAI / ChatGPT</option><option value="claude">Anthropic / Claude</option></select></div>
-    <div><label>MODELO</label><input id="aiModel" value="gpt-5.6-luna" placeholder="Modelo API"></div>
+    <div><label>MOTOR</label><select id="aiProvider"><option value="gemini">Google Gemini</option></select></div>
+    <div><label>MODELO</label><input id="aiModel" value="gemini-3.5-flash-lite" placeholder="gemini-3.5-flash-lite"></div>
   </div>
   <label>CONEXIÓN SEGURA</label>
-  <div class="status">🔐 La V24 usa un backend seguro. La API key se configura en el servidor y no se guarda en este navegador.</div>
+  <div class="status">🔐 La clave de Gemini se guarda únicamente en Render mediante <b>GEMINI_API_KEY</b>. Nunca se envía al navegador.</div>
   <div class="row">
-    <div><label>BÚSQUEDA</label><select id="aiSearch"><option value="required">Obligatoria</option><option value="auto">Automática</option></select></div>
+    <div><label>BÚSQUEDA</label><select id="aiSearch"><option value="required">Usar búsqueda web</option><option value="off">Sin búsqueda web</option></select></div>
     <div><label>PROFUNDIDAD</label><select id="aiDepth"><option value="normal">Normal</option><option value="deep">Profunda</option></select></div>
   </div>
   <button class="btn main" onclick="saveAISettings()">💾 GUARDAR CONFIGURACIÓN</button>
-  <button class="btn dark" onclick="testAIResearch()">🔎 PROBAR INVESTIGACIÓN DEL TEMA</button>
-  <div id="aiStatus" class="status" style="display:block">Motor IA listo. Para usar búsqueda real necesitas una API key del proveedor seleccionado.</div>
+  <button class="btn dark" onclick="testAIResearch()">🔎 PROBAR GEMINI</button>
+  <div id="aiStatus" class="status" style="display:block">Gemini listo. La clave se toma de Render.</div>
   <div id="aiSources" class="narration-box" style="display:none"></div>
-  <div class="warn">🔐 Seguridad: la clave de OpenAI/Claude queda en el servidor mediante variables de entorno. Nunca se envía al navegador.</div>
 </div>
 
 <div class="history-card">
@@ -232,7 +231,7 @@ function refreshHistoryUI(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
-  if($('aiProvider')) loadAISettings();
+  if($('aiModel')) loadAISettings();
   const sel=$('categorySelect');
   if(sel){
     CURRENT_CATEGORY=sel.value==='__MANUAL__' ? 'Tema manual' : sel.value;
@@ -288,7 +287,7 @@ async function createProject(){
  const steps=['Definiendo la premisa…','Investigando el tema…','Analizando fuentes…','Construyendo la narración…','Dirigiendo cada plano…'];
  let i=0;$('status').style.display='block';$('fill').style.width='0%';
  if(useAI){
-   setAIStatus('🔎 Investigando '+inputTopic+' con '+($('aiProvider')?.value==='claude'?'Claude':'OpenAI')+'…');
+   setAIStatus('🔎 Investigando '+inputTopic+' con Gemini…');
    try{
      await runAIResearch(inputTopic);
      setAIStatus('✅ Investigación terminada. Generando escenas con la información encontrada.');
@@ -302,60 +301,38 @@ async function createProject(){
 
 function setAIStatus(msg){const el=$('aiStatus');if(el){el.textContent=msg;el.style.display='block';}}
 function saveAISettings(){
- localStorage.setItem('ai_video_provider',$('aiProvider').value);
- localStorage.setItem('ai_video_model',$('aiModel').value.trim());
+ localStorage.setItem('ai_video_model',$('aiModel').value.trim()||'gemini-3.5-flash-lite');
  localStorage.setItem('ai_video_search',$('aiSearch').value);
  localStorage.setItem('ai_video_depth',$('aiDepth').value);
- setAIStatus('✅ Preferencias guardadas. La clave se mantiene en el servidor.');
+ setAIStatus('✅ Configuración de Gemini guardada. La API key permanece en Render.');
 }
 function loadAISettings(){
- const provider=localStorage.getItem('ai_video_provider')||'openai';
- $('aiProvider').value=provider;
- $('aiModel').value=localStorage.getItem('ai_video_model')||(provider==='claude'?'claude-sonnet-4-6':'gpt-5.6-luna');
+ $('aiModel').value=localStorage.getItem('ai_video_model')||'gemini-3.5-flash-lite';
  $('aiSearch').value=localStorage.getItem('ai_video_search')||'required';
  $('aiDepth').value=localStorage.getItem('ai_video_depth')||'normal';
 }
-function updateAIProvider(){
- const p=$('aiProvider').value;
- $('aiModel').value=localStorage.getItem('ai_video_model')||(p==='claude'?'claude-sonnet-4-6':'gpt-5.6-luna');
- setAIStatus(p==='claude'?'Claude seleccionado. La clave se toma del backend.':'OpenAI / ChatGPT seleccionado. La clave se toma del backend.');
-}
-function extractSourcesFromOpenAI(data){
- const out=[];
- try{
-   for(const item of (data.output||[])) for(const c of (item.content||[])) for(const a of (c.annotations||[]))
-     if(a.type==='url_citation' && a.url) out.push({title:a.title||a.url,url:a.url});
- }catch(e){}
- return out.filter((x,i,a)=>a.findIndex(y=>y.url===x.url)===i);
-}
-function extractSourcesFromClaude(data){
- const out=[];
- for(const b of (data.content||[])) if(b.type==='text' && Array.isArray(b.citations))
-   for(const c of b.citations) if(c.url) out.push({title:c.title||c.url,url:c.url});
- return out.filter((x,i,a)=>a.findIndex(y=>y.url===x.url)===i);
-}
+function updateAIProvider(){ setAIStatus('Google Gemini seleccionado. La clave se toma del backend de Render.'); }
 async function runAIResearch(topic){
- const provider=$('aiProvider').value;
  const category=selectedCategory(), duration=$('dur').value, style=$('style').value;
  const depth=$('aiDepth').value;
- const prompt=`Investiga en la web el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". Busca fuentes confiables y actuales cuando corresponda. Distingue hechos documentados de hipótesis, leyendas o afirmaciones no verificadas.\n\nDevuelve SOLO este formato:\nTÍTULO: ...\nRESUMEN: ...\nHECHOS CLAVE:\n- ...\n- ...\n- ...\nGUION: [narración continua en español, natural, sin encabezados dentro del guion, sin repetir ideas, con un gancho inicial y cierre].\n\nLa narración debe estar basada en la investigación y no inventar datos. Profundidad: ${depth}.`;
- setAIStatus('🔐 Conectando con el backend seguro…');
- const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,model:$('aiModel').value.trim(),search:$('aiSearch').value,depth,prompt})});
+ const prompt=`Investiga en la web el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". Busca fuentes confiables y actuales cuando corresponda. Distingue hechos documentados de hipótesis, leyendas o afirmaciones no verificadas. Si existen desacuerdos entre fuentes, indícalos brevemente.\n\nDevuelve SOLO este formato:\nTÍTULO: ...\nRESUMEN: ...\nHECHOS CLAVE:\n- ...\n- ...\n- ...\nGUION: [narración continua en español, natural, sin encabezados dentro del guion, sin repetir ideas, con un gancho inicial y cierre].\n\nLa narración debe estar basada en la investigación y no inventar datos. Profundidad: ${depth}.`;
+ setAIStatus('🔐 Conectando con Gemini mediante el backend seguro…');
+ const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:$('aiModel').value.trim()||'gemini-3.5-flash-lite',search:$('aiSearch').value,depth,prompt})});
  let data={}; try{data=await r.json()}catch(e){}
- if(!r.ok) throw new Error(data?.error||'El backend no pudo completar la investigación.');
+ if(!r.ok) throw new Error(data?.error||'Gemini no pudo completar la investigación.');
  const textOut=data.text||'';
  const sources=data.sources||[];
  AI_RESEARCH=textOut; AI_SOURCES=sources;
  const m=textOut.match(/GUION:\s*([\s\S]*)$/i);
  AI_SCRIPT=(m?m[1]:textOut).trim();
  const box=$('scriptBox'); if(box){box.value=AI_SCRIPT;box.style.display='block';}
- const srcBox=$('aiSources'); if(srcBox){srcBox.style.display='block';srcBox.innerHTML='<b>FUENTES ENCONTRADAS</b>\n'+(sources.length?sources.map((x,i)=>`${i+1}. ${esc(x.title)}\n${esc(x.url)}`).join('\n\n'):'El proveedor no devolvió una lista de URLs en la respuesta.');}
+ const srcBox=$('aiSources'); if(srcBox){srcBox.style.display='block';srcBox.innerHTML='<b>FUENTES ENCONTRADAS POR GEMINI</b>\n'+(sources.length?sources.map((x,i)=>`${i+1}. ${esc(x.title)}\n${esc(x.url)}`).join('\n\n'):'Gemini no devolvió URLs de fuentes en esta respuesta.');}
  return {text:textOut,sources};
 }
 async function testAIResearch(){
  const topic=$('topic').value.trim(); if(!topic){alert('Escribe o genera primero un tema.');return}
  saveAISettings();
- try{await runAIResearch(topic);setAIStatus('✅ Prueba completada. La investigación y el guion ya están cargados.');}catch(e){setAIStatus('❌ '+e.message);alert(e.message)}
+ try{await runAIResearch(topic);setAIStatus('✅ Prueba de Gemini completada. La investigación y el guion ya están cargados.');}catch(e){setAIStatus('❌ '+e.message);alert(e.message)}
 }
 
 function fitNarrationToWords(text, maxWords, topic, n){

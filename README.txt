@@ -1,18 +1,18 @@
-AI Video Studio FLOW V24.1
+AI VIDEO STUDIO FLOW — V25 GEMINI
 
-Archivos en la raíz del repositorio:
-- package.json
-- server.js
-- index.html
-- .env.example
+Backend Node.js para Render.
 
-Render:
-Build Command: npm install
-Start Command: npm start
+CONFIGURACIÓN EN RENDER
+1. Service: ai-video-studio-flow-2
+2. Environment → Environment Variables
+3. Crear:
+   GEMINI_API_KEY = tu clave de Google AI Studio
+4. Guardar con Save, rebuild, and deploy.
 
-Variables de entorno:
-OPENAI_API_KEY=tu_clave_de_OpenAI
-ANTHROPIC_API_KEY=tu_clave_de_Anthropic (opcional)
+MODELO PREDETERMINADO
+- gemini-3.5-flash-lite
 
-No subas las claves al repositorio.
-Health check: /health
+La aplicación usa Gemini desde el servidor y puede activar Google Search para investigar el tema. La clave nunca se envía al navegador.
+
+IMPORTANTE
+No pegues API keys en GitHub, README, capturas ni chats.
