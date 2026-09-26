@@ -1,22 +1,8 @@
-AI VIDEO STUDIO FLOW V28
+AI Video Studio FLOW V29
 
-V28 añade investigación web independiente sin API de búsqueda adicional:
-- Google News RSS para artículos actuales.
-- Wikipedia API para contexto y antecedentes.
-- Las URLs recuperadas se muestran en FUENTES ENCONTRADAS.
-- Las fuentes se pasan al motor IA antes de generar el guion.
-- OpenRouter sigue siendo el motor gratuito principal/fallback.
-- Gemini, OpenAI y Claude siguen siendo opcionales.
+V29 añade investigación profunda: varias consultas por tema, contraste de fuentes, dossier de evidencia y guion con fuentes usadas.
 
-RENDER
-Variables opcionales:
-OPENROUTER_API_KEY
-GEMINI_API_KEY
-OPENAI_API_KEY
-ANTHROPIC_API_KEY
+Render: usa el mismo servicio ai-video-studio-flow-2. No necesitas crear otro servicio.
+Variables recomendadas: OPENROUTER_API_KEY y, opcionalmente, GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY.
 
-No pongas claves dentro de index.html. Configúralas en Render > Environment.
-Start command: node server.js
-Node: >=20
-
-V28: filtra las fuentes web por relevancia respecto al tema exacto y descarta resultados de otros temas; realiza búsquedas con la frase completa y con palabras clave.
+La búsqueda web gratuita usa Google News RSS y Wikipedia como recuperación previa; el motor IA recibe los extractos y debe distinguir hechos, hipótesis y datos no confirmados.

@@ -53,7 +53,7 @@ function claudeSources(data) {
 }
 function uniqueSources(out){ return [...new Map((out||[]).filter(x=>x&&x.url).map(x=>[x.url,x])).values()]; }
 async function fetchText(url, options={}) {
-  const r=await fetch(url,{...options,headers:{'User-Agent':'AI-Video-Studio-FLOW/28 (research)','Accept':'text/xml,application/xml,text/html,application/json;q=0.9,*/*;q=0.8',...(options.headers||{})}});
+  const r=await fetch(url,{...options,headers:{'User-Agent':'AI-Video-Studio-FLOW/29 (research)','Accept':'text/xml,application/xml,text/html,application/json;q=0.9,*/*;q=0.8',...(options.headers||{})}});
   if(!r.ok) throw new Error(`HTTP ${r.status} al consultar ${url}`);
   return await r.text();
 }
@@ -61,6 +61,19 @@ function stripXml(s){ return String(s||'').replace(/<[^>]*>/g,' ').replace(/&amp
 function xmlTag(block, tag){ const m=block.match(new RegExp(`<${tag}(?:\\s[^>]*)?>([\\s\\S]*?)</${tag}>`,'i')); return m?stripXml(m[1]):''; }
 function normText(s){
   return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9ñáéíóúü\s-]/gi,' ').replace(/\s+/g,' ').trim();
+}
+function researchQueries(topic, depth='normal') {
+  const t=String(topic||'').trim();
+  const base=topicKeywords(t);
+  const qs=[`"${t}"`, t];
+  if(base.length){
+    qs.push(base.join(' '));
+    if(depth==='deep'){
+      qs.push(base.slice(0,Math.min(5,base.length)).join(' ')+' hechos');
+      qs.push(base.slice(0,Math.min(5,base.length)).join(' ')+' investigación');
+    }
+  }
+  return [...new Set(qs.filter(Boolean))].slice(0, depth==='deep'?5:3);
 }
 function topicKeywords(topic){
   const stop=new Set(['el','la','los','las','un','una','unos','unas','de','del','al','y','o','en','por','para','con','sin','que','como','es','son','misterio','misterios','caso','casos','historia','historias','secreto','secretos','sobre','una','uno']);
@@ -83,12 +96,12 @@ function filterRelevantSources(sources, topic){
   const threshold=keywords.length<=2 ? 0.5 : 0.34;
   return scored.filter(s=>s.relevance>=threshold).sort((a,b)=>b.relevance-a.relevance).slice(0,10).map(({relevance,...s})=>s);
 }
-async function freeWebResearch(topic){
+async function freeWebResearch(topic, depth='normal'){
   const raw=[];
   const cleanTopic=String(topic||'').trim();
   const keywords=topicKeywords(cleanTopic);
   if(!cleanTopic || !keywords.length) return [];
-  const queries=[`"${cleanTopic}"`, keywords.join(' ')].filter((x,i,a)=>x && a.indexOf(x)===i);
+  const queries=researchQueries(cleanTopic, depth);
   for(const query of queries){
     const q=encodeURIComponent(query);
     try{
@@ -109,6 +122,14 @@ async function freeWebResearch(topic){
   }catch(e){ console.warn('Wikipedia research:',e.message); }
   return filterRelevantSources(raw,cleanTopic);
 }
+function buildEvidenceMatrix(sources){
+  return sources.map((s,i)=>({id:i+1,title:s.title,url:s.url,extract:(s.snippet||'').slice(0,900)}));
+}
+function deepResearchPrompt(topic, prompt, sources){
+  const evidence=buildEvidenceMatrix(sources);
+  return `${prompt}\n\nDOSSIER DE EVIDENCIA (solo usa lo que aparece aquí para afirmar hechos externos):\n${JSON.stringify(evidence,null,2)}\n\nREGLAS: cita internamente los hechos como [Fuente 1], [Fuente 2], etc. No inventes una fuente. Si un dato no está respaldado por el dossier, trátalo como no confirmado o elimínalo. Separa claramente hechos, hipótesis y leyendas. Al final añade una sección FUENTES USADAS con cada fuente realmente utilizada.`;
+}
+
 function researchPack(sources){
   if(!sources.length) return 'No se encontraron fuentes externas automáticamente. Si no puedes verificar un dato, indícalo como no confirmado.';
   return sources.map((s,i)=>`FUENTE ${i+1}\nTítulo: ${s.title}\nURL: ${s.url}\nExtracto: ${s.snippet||'Sin extracto disponible'}\n`).join('\n');
@@ -176,7 +197,7 @@ function providerOrder(requested){
 async function main() {
   const server=http.createServer(async (req,res)=>{
     if(req.method==='OPTIONS') { res.writeHead(204,{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'GET,POST,OPTIONS'}); return res.end(); }
-    if(req.method==='GET' && req.url==='/health') return json(res,200,{ok:true,service:'AI Video Studio FLOW',version:'28.0',providers:{openrouter:!!keyFor('openrouter'),gemini:!!keyFor('gemini'),openai:!!keyFor('openai'),claude:!!keyFor('claude')}});
+    if(req.method==='GET' && req.url==='/health') return json(res,200,{ok:true,service:'AI Video Studio FLOW',version:'29.0',providers:{openrouter:!!keyFor('openrouter'),gemini:!!keyFor('gemini'),openai:!!keyFor('openai'),claude:!!keyFor('claude')}});
     if(req.method==='POST' && req.url==='/api/research') {
       try {
         const body=await readBody(req);
@@ -189,7 +210,7 @@ async function main() {
         // V27: búsqueda web independiente y sin API key para que OpenRouter también reciba fuentes/URLs.
         let externalSources=[];
         try { externalSources=await freeWebResearch(String(body.topic||body.search||'')); } catch(e) { console.warn('Free web research:',e.message); }
-        const enrichedPrompt = externalSources.length ? `${prompt}\n\nINVESTIGACIÓN WEB PREVIA (fuentes recuperadas automáticamente):\n${researchPack(externalSources)}\n\nUsa estas fuentes como punto de partida. No inventes URLs ni afirmes que una fuente dice algo que no aparece en su extracto. Si hay contradicciones, señálalas.` : prompt;
+        const enrichedPrompt = externalSources.length ? (String(body.depth||'normal')==='deep' ? deepResearchPrompt(String(body.topic||body.search||''), prompt, externalSources) : `${prompt}\n\nINVESTIGACIÓN WEB PREVIA (fuentes recuperadas automáticamente):\n${researchPack(externalSources)}\n\nUsa estas fuentes como punto de partida. No inventes URLs ni afirmes que una fuente dice algo que no aparece en su extracto. Si hay contradicciones, señálalas.`) : prompt;
         for(const provider of order){
           try{
             let model=String(body.model||'').trim();
@@ -198,7 +219,7 @@ async function main() {
             if(provider==='openai' && !model) model='gpt-5.6-luna';
             if(provider==='claude' && !model) model='claude-sonnet-4-6';
             const result=await callProvider(provider,model,enrichedPrompt);
-            return json(res,200,{ok:true,version:'28.0',provider,providerLabel:providerLabel(provider),model,text:result.text,sources:uniqueSources([...(externalSources||[]),...(result.sources||[])]),fallbacksTried:errors.map(x=>x.provider),webSearch:{ok:externalSources.length>0,count:externalSources.length}});
+            return json(res,200,{ok:true,version:'29.0',provider,providerLabel:providerLabel(provider),model,text:result.text,sources:uniqueSources([...(externalSources||[]),...(result.sources||[])]),fallbacksTried:errors.map(x=>x.provider),webSearch:{ok:externalSources.length>0,count:externalSources.length}});
           }catch(e){
             errors.push({provider,message:e.message||'Error'});
             console.error(`${provider}:`,e.message);
@@ -214,6 +235,6 @@ async function main() {
     }
     return json(res,404,{error:'Ruta no encontrada'});
   });
-  server.listen(PORT,'0.0.0.0',()=>console.log(`AI Video Studio FLOW V28 escuchando en ${PORT}`));
+  server.listen(PORT,'0.0.0.0',()=>console.log(`AI Video Studio FLOW V29 escuchando en ${PORT}`));
 }
 main();

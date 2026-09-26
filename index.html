@@ -118,7 +118,7 @@ textarea{min-height:100px;resize:vertical}.row{display:grid;grid-template-column
 </div>
 <label>INTERVALO</label><select id="int"><option value="3">1 escena cada 3 segundos</option><option value="4">1 escena cada 4 segundos</option><option value="5" selected>1 escena cada 5 segundos</option><option value="8">1 escena cada 8 segundos</option><option value="10">1 escena cada 10 segundos</option></select>
 <label>INTENSIDAD VISUAL</label><select id="detail"><option>Máximo detalle cinematográfico</option><option>Detalle alto</option></select>
-<button class="btn main" onclick="createProject()">🚀 CREAR PROYECTO — DIRECTOR V26</button>
+<button class="btn main" onclick="createProject()">🚀 CREAR PROYECTO — DIRECTOR V29</button>
 <div class="row">
 <button class="btn dark" onclick="nextTopic()">➡️ SIGUIENTE TEMA</button>
 <button class="btn dark" onclick="nextScript()">📝 CREAR GUIÓN</button>
@@ -132,17 +132,17 @@ textarea{min-height:100px;resize:vertical}.row{display:grid;grid-template-column
     <div><label>MODELO</label><input id="aiModel" value="openrouter/free" placeholder="Modelo API (AUTO puede dejarse vacío)"></div>
   </div>
   <label>CONEXIÓN SEGURA</label>
-  <div class="status">🔐 La V26 usa un backend seguro. Las claves se configuran en Render y nunca se guardan en este navegador.</div>
+  <div class="status">🔐 La V29 usa un backend seguro. Las claves se configuran en Render y nunca se guardan en este navegador.</div>
   <div class="row">
     <div><label>BÚSQUEDA</label><select id="aiSearch"><option value="required">Obligatoria</option><option value="auto">Automática</option></select></div>
     <div><label>PROFUNDIDAD</label><select id="aiDepth"><option value="normal">Normal</option><option value="deep">Profunda</option></select></div>
   </div>
   <button class="btn main" onclick="saveAISettings()">💾 GUARDAR CONFIGURACIÓN</button>
   <button class="btn dark" onclick="testAIResearch()">🔎 PROBAR INVESTIGACIÓN DEL TEMA</button>
-  <div id="aiStatus" class="status" style="display:block">Motor IA listo. Recomendado: AUTO + OPENROUTER_API_KEY. Si un motor se queda sin cuota, V26 intenta automáticamente otro motor configurado.</div>
+  <div id="aiStatus" class="status" style="display:block">Motor IA listo. Recomendado: AUTO + OPENROUTER_API_KEY. Si un motor se queda sin cuota, V29 intenta automáticamente otro motor configurado.</div>
   <div id="aiSources" class="narration-box" style="display:none"></div>
   <div class="warn">🔐 Seguridad: las claves de OpenRouter/Gemini/OpenAI/Claude quedan solo en el servidor mediante variables de entorno. Nunca se envían al navegador.
-<br>🆓 OpenRouter Free no requiere tarjeta, pero tiene límites de uso; actualmente publica 50 solicitudes/día para su plan gratuito.</div>
+<br>🆓 OpenRouter Free tiene límites de uso que pueden cambiar; revisa la cuota vigente de tu cuenta.</div>
 </div>
 
 <div class="history-card">
@@ -340,7 +340,7 @@ async function runAIResearch(topic){
  const provider=$('aiProvider').value;
  const category=selectedCategory(), duration=$('dur').value, style=$('style').value;
  const depth=$('aiDepth').value;
- const prompt=`Investiga en la web el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". Busca fuentes confiables y actuales cuando corresponda. Distingue hechos documentados de hipótesis, leyendas o afirmaciones no verificadas.\n\nDevuelve SOLO este formato:\nTÍTULO: ...\nRESUMEN: ...\nHECHOS CLAVE:\n- ...\n- ...\n- ...\nGUION: [narración continua en español, natural, sin encabezados dentro del guion, sin repetir ideas, con un gancho inicial y cierre].\n\nLa narración debe estar basada en la investigación y no inventar datos. Profundidad: ${depth}.`;
+ const prompt=`Investiga en profundidad el tema: "${topic}". Categoría: ${category}.\n\nNecesito crear un video de aproximadamente ${duration} segundos, estilo "${style}". Prioriza fuentes primarias, institucionales o medios reconocidos cuando estén disponibles. Contrasta varias fuentes y evita repetir la misma información. Distingue hechos documentados de hipótesis, leyendas o afirmaciones no verificadas.\n\nDevuelve SOLO este formato:\nTÍTULO: ...\nRESUMEN: ...\nHECHOS CLAVE:\n- ...\n- ...\n- ...\nGUION: [narración continua en español, natural, sin encabezados dentro del guion, sin repetir ideas, con un gancho inicial y cierre].\n\nLa narración debe estar basada en la investigación y no inventar datos. Profundidad: ${depth}. Si la profundidad es profunda, contrasta las fuentes y conserva solo afirmaciones respaldadas por el dossier. No inventes datos ni URLs.`;
  setAIStatus('🌐 Buscando fuentes web + conectando con el backend seguro…');
  const r=await fetch('/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({provider,model:$('aiModel').value.trim(),search:$('aiSearch').value,depth,topic,prompt})});
  let data={}; try{data=await r.json()}catch(e){}
@@ -348,6 +348,7 @@ async function runAIResearch(topic){
  const textOut=data.text||'';
  const sources=data.sources||[];
  AI_RESEARCH=textOut; AI_SOURCES=sources;
+ if(sources.length){ AI_RESEARCH += '\n\nFUENTES RECUPERADAS POR EL MOTOR:\n' + sources.map((x,i)=>`[Fuente ${i+1}] ${x.title} — ${x.url}`).join('\n'); }
  setAIStatus('✅ Motor utilizado: '+(data.providerLabel||data.provider||'IA')+(data.fallbacksTried?.length?' | Se activó fallback tras: '+data.fallbacksTried.join(', '):''));
  const m=textOut.match(/GUION:\s*([\s\S]*)$/i);
  AI_SCRIPT=(m?m[1]:textOut).trim();
