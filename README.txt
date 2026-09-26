@@ -1,9 +1,12 @@
-AI VIDEO STUDIO FLOW V30
+AI VIDEO STUDIO FLOW V31
 
-V30 añade un motor de reflexiones para categorías como Reflexión del día, Reflexiones, Motivación y Superación.
+V31 incorpora un modo de reflexión separado del modo documental/investigación.
 
-El motor pide a la IA una narración emocional y específica, con gancho, situación concreta, desarrollo, giro, mensaje y cierre. Evita listas genéricas y repeticiones. Para datos históricos o anécdotas exige respaldo en las fuentes recuperadas y no permite inventar nombres, fechas o citas.
+REFLEXIÓN DEL DÍA / REFLEXIONES / MOTIVACIÓN / SUPERACIÓN:
+- No introduce escritores, atletas, fechas, libros, noticias ni citas externas para adornar la reflexión.
+- No realiza búsqueda web externa para contaminar el guion.
+- Genera una reflexión original, humana, profunda y directa.
+- Estructura: gancho -> experiencia -> identificación -> nueva perspectiva -> mensaje -> cierre.
+- Evita repeticiones y comienzos automáticos.
 
-Mantiene la investigación web, fuentes, guion, escenas, prompts, narración, lotes y continuidad visual de V29.
-
-Para usar el motor de IA en Render, configura la clave del proveedor en las variables de entorno del servidor. Nunca pongas una clave API en el navegador.
+Las categorías documentales continúan usando investigación y trazabilidad de fuentes.

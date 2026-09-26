@@ -176,21 +176,26 @@ function providerOrder(requested){
 async function main() {
   const server=http.createServer(async (req,res)=>{
     if(req.method==='OPTIONS') { res.writeHead(204,{'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Content-Type','Access-Control-Allow-Methods':'GET,POST,OPTIONS'}); return res.end(); }
-    if(req.method==='GET' && req.url==='/health') return json(res,200,{ok:true,service:'AI Video Studio FLOW',version:'29.0',providers:{openrouter:!!keyFor('openrouter'),gemini:!!keyFor('gemini'),openai:!!keyFor('openai'),claude:!!keyFor('claude')}});
+    if(req.method==='GET' && req.url==='/health') return json(res,200,{ok:true,service:'AI Video Studio FLOW',version:'31.0',providers:{openrouter:!!keyFor('openrouter'),gemini:!!keyFor('gemini'),openai:!!keyFor('openai'),claude:!!keyFor('claude')}});
     if(req.method==='POST' && req.url==='/api/research') {
       try {
         const body=await readBody(req);
         const requested=String(body.provider||'auto');
         const prompt=String(body.prompt||'').trim();
+        const isReflectionMode=/(Categoría:\s*(Reflexión del día|Reflexiones|Motivación|Superación personal|Reflexión bíblica)|MODO REFLEXIÓN V31)/i.test(prompt);
         if(!prompt) return json(res,400,{error:'Falta el prompt de investigación.'});
         const order=providerOrder(requested);
         if(!order.length) return json(res,500,{error:'No hay ningún motor configurado. Añade OPENROUTER_API_KEY (recomendado gratis) o GEMINI_API_KEY en Render → Environment.'});
         const errors=[];
         // V27: búsqueda web independiente y sin API key para que OpenRouter también reciba fuentes/URLs.
         let externalSources=[];
-        try { externalSources=await freeWebResearch(String(body.topic||body.search||'')); } catch(e) { console.warn('Free web research:',e.message); }
-        const sourceRules = `\n\nREGLAS V29 DE TRAZABILIDAD:\n- Usa únicamente la información que aparezca en los extractos de las fuentes proporcionadas o que puedas presentar claramente como contexto general no verificado.\n- No inventes hechos, fechas, cifras, testimonios ni URLs.\n- Cada afirmación factual importante debe quedar respaldada en la sección DATOS Y FUENTES mediante uno o más números de fuente, por ejemplo: [Fuente 1].\n- Distingue explícitamente HECHO DOCUMENTADO, HIPÓTESIS, TEORÍA o DATO NO CONFIRMADO cuando corresponda.\n- Si dos fuentes difieren, indícalo en DATOS Y FUENTES y no elijas una versión como cierta sin respaldo.\n- El GUION debe ser narración natural, sin etiquetas [Fuente X] dentro del texto.\n- Después del GUION incluye una sección DATOS Y FUENTES con una lista de las afirmaciones factuales principales y sus fuentes.\n- Formato obligatorio: TÍTULO, RESUMEN, HECHOS CLAVE, GUION, DATOS Y FUENTES.`;
-const enrichedPrompt = externalSources.length ? `${prompt}${sourceRules}\n\nINVESTIGACIÓN WEB PREVIA (fuentes recuperadas automáticamente):\n${researchPack(externalSources)}\n\nUsa estas fuentes como punto de partida. No inventes URLs ni afirmes que una fuente dice algo que no aparece en su extracto. Si hay contradicciones, señálalas.` : `${prompt}${sourceRules}`;
+        // V31: las reflexiones no deben contaminarse con personajes, fechas o historias externas.
+        if(!isReflectionMode){
+          try { externalSources=await freeWebResearch(String(body.topic||body.search||'')); } catch(e) { console.warn('Free web research:',e.message); }
+        }
+        const sourceRules = `\n\nREGLAS V31 DE TRAZABILIDAD:\n- Usa únicamente la información que aparezca en los extractos de las fuentes proporcionadas o que puedas presentar claramente como contexto general no verificado.\n- No inventes hechos, fechas, cifras, testimonios ni URLs.\n- Cada afirmación factual importante debe quedar respaldada en la sección DATOS Y FUENTES mediante uno o más números de fuente, por ejemplo: [Fuente 1].\n- Distingue explícitamente HECHO DOCUMENTADO, HIPÓTESIS, TEORÍA o DATO NO CONFIRMADO cuando corresponda.\n- Si dos fuentes difieren, indícalo en DATOS Y FUENTES y no elijas una versión como cierta sin respaldo.\n- El GUION debe ser narración natural, sin etiquetas [Fuente X] dentro del texto.\n- Después del GUION incluye una sección DATOS Y FUENTES con una lista de las afirmaciones factuales principales y sus fuentes.\n- Formato obligatorio: TÍTULO, RESUMEN, HECHOS CLAVE, GUION, DATOS Y FUENTES.`;
+const reflectionRules = isReflectionMode ? `\n\nREGLAS V31 — MODO REFLEXIÓN: No uses ninguna fuente externa en el GUION. No menciones personas reales, libros, fechas, noticias, estudios o citas salvo que el usuario los haya solicitado expresamente. No fabriques historias para hacer el texto más interesante. Escribe una reflexión original, humana y emocional basada únicamente en el tema dado. En DATOS Y FUENTES escribe exactamente: “No se utilizaron fuentes externas; reflexión creativa.”` : '';
+        const enrichedPrompt = externalSources.length ? `${prompt}${sourceRules}${reflectionRules}\n\nINVESTIGACIÓN WEB PREVIA (fuentes recuperadas automáticamente):\n${researchPack(externalSources)}\n\nUsa estas fuentes como punto de partida. No inventes URLs ni afirmes que una fuente dice algo que no aparece en su extracto. Si hay contradicciones, señálalas.` : `${prompt}${sourceRules}${reflectionRules}`;
         for(const provider of order){
           try{
             let model=String(body.model||'').trim();
@@ -199,7 +204,7 @@ const enrichedPrompt = externalSources.length ? `${prompt}${sourceRules}\n\nINVE
             if(provider==='openai' && !model) model='gpt-5.6-luna';
             if(provider==='claude' && !model) model='claude-sonnet-4-6';
             const result=await callProvider(provider,model,enrichedPrompt);
-            return json(res,200,{ok:true,version:'29.0',provider,providerLabel:providerLabel(provider),model,text:result.text,sources:uniqueSources([...(externalSources||[]),...(result.sources||[])]),fallbacksTried:errors.map(x=>x.provider),webSearch:{ok:externalSources.length>0,count:externalSources.length}});
+            return json(res,200,{ok:true,version:'31.0',provider,providerLabel:providerLabel(provider),model,text:result.text,sources:uniqueSources([...(externalSources||[]),...(result.sources||[])]),fallbacksTried:errors.map(x=>x.provider),webSearch:{ok:externalSources.length>0,count:externalSources.length}});
           }catch(e){
             errors.push({provider,message:e.message||'Error'});
             console.error(`${provider}:`,e.message);
