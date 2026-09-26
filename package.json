@@ -2,7 +2,7 @@
   "name":"ai-video-studio-flow",
   "version":"26.0.0",
   "private":true,
-  "description":"AI Video Studio FLOW V26 with automatic free/paid AI provider fallback",
+  "description":"AI Video Studio FLOW V34 with visible AI provider status and automatic fallback",
   "main":"server.js",
   "scripts":{"start":"node server.js"},
   "engines":{"node":">=20"}

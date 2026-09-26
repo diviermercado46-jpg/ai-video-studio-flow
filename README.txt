@@ -6,3 +6,5 @@ Las categorías Reflexión del día, Reflexiones, Motivación y Superación pers
 Las categorías documentales/misterio/historia/ciencia/etc. conservan la investigación web y trazabilidad.
 
 Despliegue: Node/Render. Variables opcionales: OPENROUTER_API_KEY, GEMINI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY.
+
+V34: muestra qué motores tienen clave configurada y, tras cada investigación, qué motor se utilizó y qué fallbacks fallaron antes.

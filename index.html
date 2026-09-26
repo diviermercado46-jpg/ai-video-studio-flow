@@ -139,7 +139,8 @@ textarea{min-height:100px;resize:vertical}.row{display:grid;grid-template-column
   </div>
   <button class="btn main" onclick="saveAISettings()">💾 GUARDAR CONFIGURACIÓN</button>
   <button class="btn dark" onclick="testAIResearch()">🔎 PROBAR INVESTIGACIÓN DEL TEMA</button>
-  <div id="aiStatus" class="status" style="display:block">Motor IA listo. Recomendado: AUTO + OPENROUTER_API_KEY. Si un motor se queda sin cuota, V26 intenta automáticamente otro motor configurado.</div>
+  <div id="aiStatus" class="status" style="display:block">Motor IA listo. Recomendado: AUTO + OPENROUTER_API_KEY.</div>
+  <div id="providerStatus" class="status" style="display:block">🔄 Comprobando motores configurados…</div>
   <div id="aiSources" class="narration-box" style="display:none"></div>
   <div class="warn">🔐 Seguridad: las claves de OpenRouter/Gemini/OpenAI/Claude quedan solo en el servidor mediante variables de entorno. Nunca se envían al navegador.
 <br>🆓 OpenRouter Free no requiere tarjeta, pero tiene límites de uso; actualmente publica 50 solicitudes/día para su plan gratuito.</div>
@@ -352,7 +353,7 @@ async function runAIResearch(topic){
  const textOut=data.text||'';
  const sources=data.sources||[];
  AI_RESEARCH=textOut; AI_SOURCES=sources;
- setAIStatus('✅ Motor utilizado: '+(data.providerLabel||data.provider||'IA')+(data.fallbacksTried?.length?' | Se activó fallback tras: '+data.fallbacksTried.join(', '):''));
+ renderProviderResult(data);
  const m=textOut.match(/GUION:\s*([\s\S]*?)(?:\n(?:DATOS Y FUENTES|DATOS\s+Y\s+FUENTES)\s*:?)/i);
  AI_SCRIPT=(m?m[1]:textOut).trim();
  if(isReflection){ AI_SCRIPT=cleanReflectionScript(AI_SCRIPT); }
@@ -378,6 +379,21 @@ function cleanReflectionScript(text){
  return out.join(' ').replace(/\s+([,.!?;:])/g,'$1').trim();
 }
 
+function providerName(p){return ({openrouter:'OpenRouter',gemini:'Google Gemini',openai:'OpenAI / ChatGPT',claude:'Anthropic / Claude'})[p]||p;}
+async function refreshProviderStatus(){
+  const el=$('providerStatus'); if(!el) return;
+  try{
+    const r=await fetch('/health'); const d=await r.json();
+    const order=['openrouter','gemini','openai','claude'];
+    el.innerHTML='<b>⚙️ Motores configurados</b><br>'+order.map(p=>d.providers?.[p]?`🟢 ${providerName(p)} — clave configurada`:`⚪ ${providerName(p)} — sin clave`).join('<br>');
+  }catch(e){el.textContent='⚠️ No se pudo consultar el estado de los motores.';}
+}
+function renderProviderResult(data){
+  const used=`🟢 <b>Motor utilizado:</b> ${data.providerLabel||providerName(data.provider)}${data.model?` — ${data.model}`:''}`;
+  const tried=(data.fallbacksTried||[]).map(p=>`<li>🔴 ${providerName(p)} — no pudo completar la solicitud</li>`).join('');
+  const fb=tried?`<br><b>🔄 Fallback activado</b><ul>${tried}</ul>`:'<br>ℹ️ No fue necesario usar fallback.';
+  $('aiStatus').innerHTML=used+fb;
+}
 async function testAIResearch(){
  const topic=$('topic').value.trim(); if(!topic){alert('Escribe o genera primero un tema.');return}
  saveAISettings();
@@ -1304,6 +1320,7 @@ function copyScene(btn,mode){
 }
 function copyAll(){copyText(window.project||'').then(ok=>{if(ok)alert('✓ Proyecto completo copiado.')})}
 function downloadTxt(){const blob=new Blob([window.project||''],{type:'text/plain;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='AI_Video_Studio_FLOW_V4.txt';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+refreshProviderStatus();
 </script>
 </body>
 </html>
