@@ -1,13 +1,12 @@
 {
-  "name": "ai-video-studio-flow",
-  "version": "36.0.0",
+  "name": "ai-video-editor-v4",
+  "version": "4.0.0",
   "private": true,
-  "description": "AI Video Studio FLOW V36",
-  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
-  "engines": {
-    "node": ">=20"
+  "dependencies": {
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1"
   }
 }
